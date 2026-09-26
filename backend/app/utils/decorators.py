@@ -27,9 +27,9 @@ def role_required(allowed_roles):
     """Decorator to enforce role-based access control.
     
     Usage:
-        @role_required([UserRole.ADMIN, UserRole.STAFF])
-        def some_route():
-            ...
+    @role_required([UserRole.ADMIN])
+    def some_route():
+        ...
     """
     if isinstance(allowed_roles, str):
         allowed_roles = [allowed_roles]
