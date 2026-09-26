@@ -1,0 +1,28 @@
+# Python / uv
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+*.db
+*.sqlite3
+
+# Node / Vite
+node_modules/
+dist/
+dist-ssr/
+*.local
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
