@@ -1,330 +1,461 @@
 # AI-Assisted Complaint Management System
 
-A production-style, portfolio-quality, full-stack web application designed for educational institutions, residential campuses, and enterprise organizations. The system facilitates end-to-end complaint filing, automated AI-assisted triage and classification (powered by Google Gemini), administrator review with human-in-the-loop override authority, technician dispatch, status audit trails, resolution verification, and feedback ratings.
+A production-style, full-stack complaint management web application designed for educational institutions, residential campuses, and organizations.
+
+The system allows users to submit complaints, uses AI to extract useful information such as category, priority, and summary, and sends the complaint to the associated organization for **human review and manual status management**.
+
+AI is used only as an assistance layer. The organization/admin always has control over the complaint lifecycle.
 
 ---
 
 ## Table of Contents
-1. [Project Overview](#project-overview)
-2. [Key Features by Role](#key-features-by-role)
-3. [Technology Stack](#technology-stack)
-4. [Architecture & Design Principles](#architecture--design-principles)
-5. [AI Workflow & Human-in-the-Loop Governance](#ai-workflow--human-in-the-loop-governance)
-6. [Complaint Lifecycle State Machine](#complaint-lifecycle-state-machine)
-7. [Directory Structure](#directory-structure)
-8. [Setup & Installation Guide](#setup--installation-guide)
-9. [Environment Variables](#environment-variables)
-10. [Demo Accounts & Seed Data](#demo-accounts--seed-data)
-11. [Running the Application](#running-the-application)
-12. [REST API Documentation](#rest-api-documentation)
-13. [Testing](#testing)
-14. [Future Roadmap](#future-roadmap)
+
+1. [Project Overview](#1-project-overview)
+2. [Key Features by Role](#2-key-features-by-role)
+3. [Technology Stack](#3-technology-stack)
+4. [Architecture & Design Principles](#4-architecture--design-principles)
+5. [AI Workflow](#5-ai-workflow)
+6. [Complaint Lifecycle](#6-complaint-lifecycle)
+7. [Directory Structure](#7-directory-structure)
+8. [Setup & Installation](#8-setup--installation)
+9. [Environment Variables](#9-environment-variables)
+10. [Demo Accounts & Seed Data](#10-demo-accounts--seed-data)
+11. [Running the Application](#11-running-the-application)
+12. [REST API Documentation](#12-rest-api-documentation)
+13. [Testing](#13-testing)
+14. [Future Roadmap](#14-future-roadmap)
 
 ---
 
 ## 1. Project Overview
 
-In traditional complaint desks, complaints often languish in unclassified inboxes or get routed to the wrong departments due to ambiguous descriptions. 
+Traditional complaint systems often depend on manual classification and disconnected communication, which can make it difficult to understand, prioritize, and track complaints.
 
-The **AI-Assisted Complaint Management System** solves this by:
-- Employing **Google Gemini API** (`google-genai` SDK) to instantly analyze raw grievance text and extract the most appropriate category, urgency/priority, relevant department, and a concise summary.
-- Ensuring **AI Never Has Final Authority**: Administrative staff retain 100% override capabilities to correct priority, reassign departments, or update categories before assigning work.
-- Providing **Role-Enforced Workspaces**: Dedicated dashboards for Complainants, Administrators, and Department Technicians.
-- Delivering a **Complete Audit Trail**: Every status change, reassignment, and technician note is timestamped in an immutable timeline.
-- Enabling **User Verification & Reopen Loop**: The original user verifies if the repair was satisfactory, with options to confirm, rate, or reopen the ticket with a rejection reason.
+The **AI-Assisted Complaint Management System** addresses this by:
+
+- Using **Google Gemini API** to analyze complaint descriptions.
+- Extracting useful information such as:
+  - Category
+  - Priority
+  - Summary
+- Sending the complaint to the user's associated organization.
+- Keeping AI suggestions **advisory only**.
+- Allowing administrators to manually review and update complaints.
+- Providing users with a dashboard to track their complaints.
+- Maintaining a complaint timeline and status history.
+- Providing notifications when important complaint events occur.
+- Supporting multiple organizations through organization-specific user registration.
+
+### Important Design Principle
+
+> **AI assists with complaint understanding; it does not control the complaint lifecycle.**
+
+The final decision regarding complaint classification and status remains with the organization/admin.
 
 ---
 
 ## 2. Key Features by Role
 
-### Complainants (USER: Students / Residents / Staff)
-- **Interactive Filing**: Submit grievances with instant AI categorization preview.
-- **Personal Dashboard**: Track submitted tickets with color-coded status badges and priority tags.
-- **Audit Timeline**: View real-time technician notes, inspections, and status transitions.
-- **Resolution Verification**: Confirm satisfactory resolution or reject with specific reasons (moves ticket back to `REOPENED`).
-- **5-Star Rating & Review**: Leave qualitative and quantitative feedback upon ticket closure.
-- **In-App Notifications**: Real-time alerts on ticket assignments, status changes, and closures.
+### Users
 
-### Administrators (ADMIN: Dean / Facilities Manager / Ops Lead)
-- **Executive Analytics Dashboard**: Metric counters, status distributions, category breakdowns, and department workload charts.
-- **Triage & Classification Review**: Side-by-side comparison of AI advisory suggestions vs. approved classifications.
-- **Direct Overrides**: Edit category, priority (`LOW`, `MEDIUM`, `HIGH`, `CRITICAL`), and department with one click.
-- **Technician Dispatch**: Assign or reassign tickets to active staff members with optional instructions.
-- **User & Staff Directory**: Manage registered users, activate/deactivate accounts, and inspect staff assignments.
-- **Advanced Filtering & Search**: Multi-filter complaint lists with server-side pagination.
+Users are people who submit complaints to their associated organization.
 
-### Department Staff (STAFF: Maintenance / IT Support / Housekeeping)
-- **Dedicated Technician Workspace**: Clean queue showing only tickets assigned to the logged-in staff member.
-- **Work Lifecycle Actions**:
-  - Start Work (`IN_PROGRESS`).
-  - Post work progress notes (e.g., parts ordered, inspection logs).
-  - Mark `RESOLVED` with mandatory resolution documentation.
+- **Account Registration**
+  - Create an account using the organization's unique Organization ID.
+  - User account is automatically associated with that organization.
+
+- **Complaint Submission**
+  - Submit a complaint through the web application.
+  - Complaint description is analyzed by AI.
+
+- **AI-Assisted Information Extraction**
+  - Category
+  - Priority
+  - Short summary
+
+- **My Complaints**
+  - View all complaints submitted by the user.
+  - Check current status.
+  - View complaint details and history.
+
+- **Complaint Timeline**
+  - View important updates and status changes.
+
+- **Resolution Confirmation**
+  - Confirm whether a resolved complaint has been satisfactorily handled.
+  - Provide feedback when applicable.
+
+- **Notifications**
+  - Receive notifications about complaint status changes and important updates.
+
+---
+
+### Administrators
+
+Administrators manage complaints belonging to their organization.
+
+- **Admin Dashboard**
+  - View complaint statistics.
+  - Monitor complaint statuses.
+  - View category and priority information.
+
+- **Complaint Management**
+  - View complaints submitted by users.
+  - Search and filter complaints.
+  - Open complete complaint details.
+
+- **AI Classification Review**
+  - View AI-generated category, priority, and summary.
+  - Review AI suggestions before taking action.
+
+- **Manual Classification**
+  - Change category.
+  - Change priority.
+  - Update other complaint information when required.
+
+- **Manual Status Management**
+  - Move complaints through the organization's workflow.
+  - AI does not automatically change complaint status.
+
+- **User Directory**
+  - View users belonging to the organization.
+  - Manage user account status where applicable.
+
+- **Notifications**
+  - System notifications can be generated when complaint information or status changes.
 
 ---
 
 ## 3. Technology Stack
 
 ### Backend
-- **Language**: Python 3.12 (managed via modern `uv` packaging)
-- **Framework**: Flask (Application Factory architecture)
-- **Database**: SQLite with SQLAlchemy ORM (modern 2.0 query patterns)
-- **Authentication**: JWT authentication (`flask-jwt-extended`) with role-based claims
-- **Security**: Passwords hashed using `werkzeug.security` (PBKDF2 SHA-256)
-- **CORS**: Cross-Origin Resource Sharing handled via `flask-cors`
-- **AI Integration**: Google Gemini API via the official `google-genai` Python SDK
+
+- **Language:** Python 3.12
+- **Package Manager:** uv
+- **Framework:** Flask
+- **Database:** SQLite
+- **ORM:** SQLAlchemy
+- **Authentication:** JWT using `flask-jwt-extended`
+- **Password Security:** Werkzeug password hashing
+- **CORS:** Flask-CORS
+- **AI Integration:** Google Gemini API using the `google-genai` SDK
 
 ### Frontend
-- **Framework**: React 19 SPA built with Vite
-- **Routing**: React Router v7 with protected routes and role guards
-- **HTTP Client**: Axios with centralized request/response interceptors
-- **Icons**: Lucide React
-- **Styling**: Vanilla CSS Design System (clean variables, responsive layout, glassmorphic accents, zero Tailwind bloat)
+
+- **Framework:** React
+- **Build Tool:** Vite
+- **Routing:** React Router
+- **HTTP Client:** Axios
+- **Icons:** Lucide React
+- **Styling:** Vanilla CSS
 
 ---
 
 ## 4. Architecture & Design Principles
 
+```text
+                     React Frontend
+                           |
+                           | HTTP REST + JWT
+                           v
+                  Flask Backend API
+                           |
+          +----------------+----------------+
+          |                |                |
+          v                v                v
+       Routes          Services          Auth/RBAC
+          |                |                |
+          |                v                |
+          |          AI Service             |
+          |                |                |
+          |                v                |
+          |         Google Gemini           |
+          |                                 |
+          +----------------+----------------+
+                           |
+                           v
+                    SQLAlchemy ORM
+                           |
+                           v
+                       SQLite DB
 ```
-  ┌──────────────────────────────────────────────────────────────┐
-  │                         React 19 SPA                         │
-  │  (AuthContext, ProtectedRoute, RoleRoute, Central Axios API)  │
-  └──────────────────────────────┬───────────────────────────────┘
-                                 │ HTTP REST (Bearer JWT)
-                                 ▼
-  ┌──────────────────────────────────────────────────────────────┐
-  │                        Flask Backend                         │
-  │                                                              │
-  │  ┌────────────────────┐   ┌───────────────────────────────┐  │
-  │  │ Route Blueprints   │   │ Security & Auth Layer         │  │
-  │  │ - /api/auth        │   │ - JWT Verification            │  │
-  │  │ - /api/complaints  │   │ - @role_required RBAC         │  │
-  │  │ - /api/admin       │   │ - Model Ownership Checks      │  │
-  │  │ - /api/staff       │   └───────────────────────────────┘  │
-  │  │ - /api/feedback    │                                      │
-  │  │ - /api/notifications                                      │
-  │  └─────────┬──────────┘                                      │
-  │            │                                                 │
-  │  ┌─────────▼──────────┐   ┌───────────────────────────────┐  │
-  │  │ Service Layer      │   │ SQLAlchemy ORM Models         │  │
-  │  │ - AIService        │   │ - User, Complaint, Assignment │  │
-  │  │ - NotificationSvc  │   │ - ComplaintUpdate, Feedback   │  │
-  │  └─────────┬──────────┘   │ - Notification                │  │
-  │            │              └───────────────┬───────────────┘  │
-  └────────────┼──────────────────────────────┼──────────────────┘
-               │                              │
-               ▼                              ▼
-      ┌─────────────────┐             ┌───────────────┐
-      │ Google Gemini   │             │ SQLite DB     │
-      │ AI API          │             │ complaints.db │
-      └─────────────────┘             └───────────────┘
-```
+
+### Main principles
+
+1. **Authentication**
+   - Users and administrators authenticate using JWT.
+
+2. **Role-Based Access**
+   - User-specific and admin-specific endpoints are protected.
+
+3. **Organization Isolation**
+   - Users belong to an organization.
+   - Administrators manage complaints for their organization.
+
+4. **Human-in-the-Loop AI**
+   - AI provides suggestions.
+   - Admin makes the final decision.
+
+5. **Manual Complaint Lifecycle**
+   - Complaint status is controlled by the organization/admin.
+   - AI does not automatically move complaints between stages.
+
+6. **Simple Architecture**
+   - Flask handles APIs and business logic.
+   - React handles the user interface.
+   - SQLite stores application data.
 
 ---
 
-## 5. AI Workflow & Human-in-the-Loop Governance
+## 5. AI Workflow
 
+```text
+User submits complaint
+          |
+          v
+Flask receives complaint
+          |
+          v
+AI Service analyzes complaint
+          |
+          v
+Google Gemini API
+          |
+          v
+Structured AI result
+          |
+     +----+----+
+     |         |
+   Success   Failure
+     |         |
+     v         v
+AI category   Safe fallback
+AI priority   values
+AI summary
+     |
+     v
+Complaint stored
+     |
+     v
+Associated Organization
+     |
+     v
+Admin reviews complaint
+     |
+     v
+Admin can accept or modify
+AI suggestions
 ```
-User submits complaint description
-          │
-          ▼
-Flask Backend invokes AIService (app/services/ai_service.py)
-          │
-          ▼
-Google Gemini API analyzes grievance text
-          │
-          ▼
-Structured JSON output parsed & validated against controlled categories
-          │
-          ├──> Success: Stored as ai_category, ai_priority, ai_department, ai_summary
-          └──> Fallback: Defaults applied if API key is unconfigured or rate-limited
-          │
-          ▼
-Ticket marked PENDING
-          │
-          ▼
-Administrator reviews side-by-side comparison:
-┌─────────────────────────────────┬─────────────────────────────────┐
-│   AI Suggested (Advisory)       │   Admin Approved (Final)        │
-│   Category: IT Support          │   Category: IT Support          │
-│   Priority: CRITICAL            │   Priority: HIGH (Overridden)   │
-│   Department: IT Support        │   Department: IT Support        │
-└─────────────────────────────────┴─────────────────────────────────┘
-          │
-          ▼
-Administrator assigns approved ticket to technician
-```
+
+### AI Responsibilities
+
+The AI layer can help extract:
+
+- **Category**
+- **Priority**
+- **Summary**
+
+### AI Does NOT
+
+- Automatically resolve complaints.
+- Automatically close complaints.
+- Automatically assign complaints to staff.
+- Automatically change complaint stages.
+- Make final administrative decisions.
 
 ---
 
-## 6. Complaint Lifecycle State Machine
+## 6. Complaint Lifecycle
 
+The complaint lifecycle is intentionally simple because there is no separate staff/technician workflow.
+
+```text
+                +-------------+
+                |   PENDING   |
+                +------+------+
+                       |
+                       | Admin reviews
+                       v
+                +-------------+
+                | UNDER_REVIEW|
+                +------+------+
+                       |
+                       | Admin works on complaint
+                       | / changes status
+                       v
+                +-------------+
+                | IN_PROGRESS |
+                +------+------+
+                       |
+                       | Admin marks resolved
+                       v
+                +-------------+
+                |  RESOLVED   |
+                +------+------+
+                       |
+                +------+------+
+                |             |
+             Confirm        Reject
+                |             |
+                v             v
+        +-------------+  +-------------+
+        |  CONFIRMED  |  |   REOPENED  |
+        +-------------+  +------+------+
+                               |
+                               | Admin reviews again
+                               v
+                         IN_PROGRESS
 ```
-              ┌──────────────┐
-              │   PENDING    │ ◄─── (Created by user)
-              └──────┬───────┘
-                     │ (Admin reviews)
-                     ▼
-              ┌──────────────┐
-              │ UNDER_REVIEW │
-              └──────┬───────┘
-                     │ (Admin assigns staff)
-                     ▼
-              ┌──────────────┐
-              │   ASSIGNED   │
-              └──────┬───────┘
-                     │ (Staff starts work)
-                     ▼
-         ┌────►┌─────────────┐
-         │     │ IN_PROGRESS │
-(Reopen) │     └──────┬──────┘
-         │            │ (Staff marks resolved)
-         │            ▼
-         │     ┌─────────────┐
-         │     │  RESOLVED   │
-         │     └──────┬──────┘
-         │            │
-   (Reject)     ┌─────┴─────┐ (Confirm)
-         │      │           │
-         │      ▼           ▼
-   ┌─────┴────┐       ┌───────────┐
-   │ REOPENED │       │ CONFIRMED │ ◄─── (User submits 1-5 star review)
-   └──────────┘       └───────────┘
-```
+
+### Status Meaning
+
+| Status | Meaning |
+|---|---|
+| `PENDING` | Complaint has been submitted and is waiting for admin review |
+| `UNDER_REVIEW` | Admin has opened/reviewed the complaint |
+| `IN_PROGRESS` | Organization is actively handling the complaint |
+| `RESOLVED` | Admin considers the complaint resolved |
+| `CONFIRMED` | User confirms satisfactory resolution |
+| `REOPENED` | User rejects the resolution and the complaint needs further attention |
+
+> The exact statuses can be adjusted according to the implementation, but the important rule is that **status changes are controlled manually by the organization/admin**.
 
 ---
 
 ## 7. Directory Structure
 
-```
+```text
 Complaint_management_system/
+│
 ├── backend/
 │   ├── app/
-│   │   ├── __init__.py               # Flask application factory & error handlers
-│   │   ├── config.py                 # Environment configurations (Dev, Test, Prod)
-│   │   ├── extensions.py             # SQLAlchemy, JWTManager, CORS instances
+│   │   ├── __init__.py              # Flask application factory
+│   │   ├── config.py                # Environment configuration
+│   │   ├── extensions.py            # SQLAlchemy, JWT, CORS
 │   │   │
-│   │   ├── models/                   # Database entities & relationships
+│   │   ├── models/
 │   │   │   ├── __init__.py
-│   │   │   ├── user.py               # User authentication & roles
-│   │   │   ├── complaint.py          # Complaint entity & status lifecycle
-│   │   │   ├── assignment.py         # Staff assignment records
-│   │   │   ├── complaint_update.py   # Immutable audit timeline events
-│   │   │   ├── feedback.py           # User ratings & reviews
-│   │   │   └── notification.py       # In-app notifications
+│   │   │   ├── user.py              # User, role & organization relationship
+│   │   │   ├── organization.py      # Organization entity
+│   │   │   ├── complaint.py         # Complaint entity & status
+│   │   │   ├── complaint_update.py  # Complaint history/timeline
+│   │   │   ├── feedback.py          # User feedback
+│   │   │   └── notification.py      # In-app notifications
 │   │   │
-│   │   ├── routes/                   # REST API controllers
+│   │   ├── routes/
 │   │   │   ├── __init__.py
-│   │   │   ├── auth_routes.py        # Register, Login, Me
-│   │   │   ├── complaint_routes.py   # User complaints & lifecycle actions
-│   │   │   ├── admin_routes.py       # Triage, Override, Assign, Analytics
-│   │   │   ├── staff_routes.py       # Technician queue, Updates, Resolution
-│   │   │   ├── feedback_routes.py    # Ratings & comments
-│   │   │   └── notification_routes.py# In-app notification management
+│   │   │   ├── auth_routes.py       # Register, login, current user
+│   │   │   ├── organization_routes.py # Organization creation/management
+│   │   │   ├── complaint_routes.py  # User complaint operations
+│   │   │   ├── admin_routes.py      # Admin complaint management
+│   │   │   ├── feedback_routes.py   # Ratings/comments
+│   │   │   └── notification_routes.py # Notifications
 │   │   │
-│   │   ├── services/                 # Reusable business logic
-│   │   │   ├── ai_service.py         # Google Gemini classification & fallback
-│   │   │   └── notification_service.py # System notification dispatcher
+│   │   ├── services/
+│   │   │   ├── ai_service.py        # AI classification & fallback
+│   │   │   └── notification_service.py
 │   │   │
-│   │   └── utils/                    # Decorators, validators, response helpers
-│   │       ├── decorators.py         # @role_required, @admin_required, @staff_required
-│   │       ├── validators.py         # Input validation & schema checks
-│   │       └── helpers.py            # Standardized API response format
+│   │   └── utils/
+│   │       ├── decorators.py        # Role/auth decorators
+│   │       ├── validators.py        # Input validation
+│   │       └── helpers.py           # Response helpers
 │   │
-│   ├── tests/                        # Automated unit & integration tests
+│   ├── tests/
 │   │   ├── test_auth.py
 │   │   ├── test_complaints.py
 │   │   └── test_workflow.py
 │   │
-│   ├── run.py                        # Entrypoint & CLI commands (init-db, seed-db)
-│   ├── seed.py                       # Demo accounts & realistic sample complaints
-│   ├── pyproject.toml                # uv package dependencies
-│   ├── .env.example                  # Environment template
-│   └── complaints.db                 # SQLite development database
+│   ├── run.py                       # Backend entrypoint
+│   ├── seed.py                      # Optional development seed data
+│   ├── pyproject.toml
+│   ├── .env.example
+│   └── complaints.db
 │
 ├── frontend/
 │   ├── src/
-│   │   ├── components/               # Reusable UI widgets
-│   │   │   ├── Navbar.jsx            # Header, user badge, notification bell
-│   │   │   ├── Sidebar.jsx           # Role-based navigational drawer
-│   │   │   ├── ProtectedRoute.jsx    # Authentication route guard
-│   │   │   ├── RoleRoute.jsx         # Role authorization route guard
-│   │   │   ├── ComplaintCard.jsx     # Card component for complaint items
-│   │   │   ├── ComplaintStatusBadge.jsx # Color-coded status & priority pills
-│   │   │   ├── ComplaintTimeline.jsx # Visual audit history trail
-│   │   │   ├── StatsCard.jsx         # Metric summary card
-│   │   │   ├── LoadingSpinner.jsx    # Polished loader
-│   │   │   ├── EmptyState.jsx        # Clean zero-data placeholder
-│   │   │   └── Toast.jsx             # In-app toast alerts
+│   │   ├── components/
+│   │   │   ├── Navbar.jsx
+│   │   │   ├── Sidebar.jsx
+│   │   │   ├── ProtectedRoute.jsx
+│   │   │   ├── RoleRoute.jsx
+│   │   │   ├── ComplaintCard.jsx
+│   │   │   ├── ComplaintStatusBadge.jsx
+│   │   │   ├── ComplaintTimeline.jsx
+│   │   │   ├── StatsCard.jsx
+│   │   │   ├── LoadingSpinner.jsx
+│   │   │   ├── EmptyState.jsx
+│   │   │   └── Toast.jsx
 │   │   │
 │   │   ├── context/
-│   │   │   └── AuthContext.jsx       # Global authentication state
+│   │   │   └── AuthContext.jsx
 │   │   │
-│   │   ├── pages/                    # Views
-│   │   │   ├── Login.jsx             # Sign in with 1-click demo fillers
-│   │   │   ├── Register.jsx          # Sign up for accounts
-│   │   │   ├── Unauthorized.jsx      # 403 Forbidden screen
+│   │   ├── pages/
+│   │   │   ├── Login.jsx
+│   │   │   ├── Register.jsx
+│   │   │   ├── Unauthorized.jsx
 │   │   │   │
-│   │   │   ├── user/                 # Complainant pages
+│   │   │   ├── user/
 │   │   │   │   ├── UserDashboard.jsx
 │   │   │   │   ├── SubmitComplaint.jsx
 │   │   │   │   ├── MyComplaints.jsx
 │   │   │   │   └── ComplaintDetails.jsx
 │   │   │   │
-│   │   │   ├── admin/                # Administrator pages
-│   │   │   │   ├── AdminDashboard.jsx
-│   │   │   │   ├── ManageComplaints.jsx
-│   │   │   │   ├── ComplaintReview.jsx
-│   │   │   │   ├── ManageUsers.jsx
-│   │   │   │   └── StaffManagement.jsx
-│   │   │   │
-│   │   │   └── staff/                # Technician pages
-│   │   │       ├── StaffDashboard.jsx
-│   │   │       ├── AssignedComplaints.jsx
-│   │   │       └── ComplaintWork.jsx
+│   │   │   └── admin/
+│   │   │       ├── AdminDashboard.jsx
+│   │   │       ├── ManageComplaints.jsx
+│   │   │       ├── ComplaintReview.jsx
+│   │   │       └── ManageUsers.jsx
 │   │   │
 │   │   ├── services/
-│   │   │   └── api.js                # Central Axios client
+│   │   │   └── api.js
+│   │   │
 │   │   ├── utils/
-│   │   │   └── constants.js          # Statuses, categories, departments, colors
-│   │   ├── App.jsx                   # Router configuration & layouts
-│   │   ├── index.css                 # Vanilla CSS design system
-│   │   └── main.jsx                  # React entry point
+│   │   │   └── constants.js
+│   │   │
+│   │   ├── App.jsx
+│   │   ├── index.css
+│   │   └── main.jsx
 │   │
 │   ├── package.json
 │   └── vite.config.js
+│
 └── README.md
 ```
 
 ---
 
-## 8. Setup & Installation Guide
+## 8. Setup & Installation
 
 ### Prerequisites
-- **Python 3.12** installed
-- **Node.js 18+** and **npm** installed
-- **uv** package manager installed (`pip install uv` or official standalone installer)
+
+- Python 3.12
+- Node.js 18+
+- npm
+- uv
 
 ### Step 1: Clone or Navigate to the Project
+
 ```bash
 cd Complaint_management_system
 ```
 
 ### Step 2: Backend Setup
+
 ```bash
 cd backend
 
-# Environment configuration
 cp .env.example .env
 
-# Initialize and seed database
 uv run python seed.py
 ```
 
+If you are using Windows PowerShell, you can create the `.env` file manually from `.env.example`.
+
 ### Step 3: Frontend Setup
+
 ```bash
 cd ../frontend
 
-# Install npm dependencies
 npm install
 ```
 
@@ -332,146 +463,236 @@ npm install
 
 ## 9. Environment Variables
 
-Create `backend/.env` based on `backend/.env.example`:
+Create `backend/.env`:
 
 ```ini
 FLASK_APP=run.py
 FLASK_ENV=development
-SECRET_KEY=dev-secret-key-change-in-production-123456
-JWT_SECRET_KEY=jwt-secret-key-change-in-production-654321
+
+SECRET_KEY=change-this-secret-key
+JWT_SECRET_KEY=change-this-jwt-secret-key
 JWT_ACCESS_TOKEN_EXPIRES_HOURS=24
+
 DATABASE_URL=sqlite:///complaints.db
+
 FRONTEND_URL=http://localhost:5173
 
-# Optional: Google Gemini API Key
-# If omitted or left empty, the application uses built-in graceful fallback
-# defaults without interrupting complaint submission!
+# Optional Google Gemini API configuration
+# If the API key is unavailable, the application should use its fallback behavior.
+
 GEMINI_API_KEY=your_gemini_api_key_here
-GEMINI_MODEL=gemini-2.5-flash
+GEMINI_MODEL=your_configured_gemini_model
 ```
+
+> Never commit real API keys or production secrets to GitHub.
 
 ---
 
 ## 10. Demo Accounts & Seed Data
 
-The database comes pre-seeded with realistic institutional test complaints and the following demo accounts:
+Demo data depends on the current `seed.py` implementation.
 
-| Role | Name | Email | Password |
-| :--- | :--- | :--- | :--- |
-| **Admin** | System Administrator | `admin@example.com` | `admin123` |
-| **Staff (Maint.)** | Rajesh Kumar (Maintenance) | `staff@example.com` | `staff123` |
-| **Staff (IT)** | Priya Sharma (IT Support) | `itstaff@example.com` | `staff123` |
-| **Student** | Alice Johnson (Student) | `user@example.com` | `user123` |
-| **Resident** | Bob Smith (Resident) | `bob@example.com` | `user123` |
+A typical development setup can contain:
 
-> [!TIP]
-> On the **Sign In** screen (`/login`), click the quick-fill buttons (**Admin**, **Staff**, **Student**) to instantly autofill demo credentials!
+| Role | Purpose |
+|---|---|
+| Admin | Manage organization complaints and users |
+| User | Submit and track complaints |
+
+If seed data is not required, the database can be created without demo records.
+
+### Recommended Development Flow
+
+```text
+Create Organization
+        |
+        v
+Organization receives unique Organization ID
+        |
+        v
+User registers using Organization ID
+        |
+        v
+User becomes associated with Organization
+        |
+        v
+User submits complaint
+        |
+        v
+Admin manages complaint
+```
 
 ---
 
 ## 11. Running the Application
 
-### Terminal 1 — Start Flask Backend Server:
+### Terminal 1 — Flask Backend
+
 ```bash
 cd backend
 uv run python run.py
 ```
-*Backend runs on: `http://localhost:5000`*
 
-### Terminal 2 — Start Vite React Frontend:
+Backend:
+
+```text
+http://localhost:5000
+```
+
+### Terminal 2 — React Frontend
+
 ```bash
 cd frontend
 npm run dev
 ```
-*Frontend runs on: `http://localhost:5173`*
 
-Open your browser and navigate to: `http://localhost:5173`
+Frontend:
+
+```text
+http://localhost:5173
+```
+
+Open the frontend URL in your browser.
 
 ---
 
 ## 12. REST API Documentation
 
-All responses follow a predictable JSON contract:
-```json
-{
-  "success": true,
-  "message": "Human readable message",
-  "data": { ... },
-  "pagination": { "page": 1, "per_page": 10, "total": 50, "pages": 5 }
-}
-```
+The exact endpoints should match the current backend implementation.
 
-### 12.1 Authentication Endpoints
-| Method | Endpoint | Auth | Role | Description |
-| :--- | :--- | :--- | :--- | :--- |
-| `POST` | `/api/auth/register` | None | Any | Register new account (`name`, `email`, `password`, `role`) |
-| `POST` | `/api/auth/login` | None | Any | Authenticate and retrieve JWT token |
-| `GET` | `/api/auth/me` | JWT | Any | Get current user profile |
-| `POST` | `/api/auth/logout` | None | Any | Invalidate client session |
+### 12.1 Authentication
 
-### 12.2 Complaint Endpoints (User)
-| Method | Endpoint | Auth | Role | Description |
-| :--- | :--- | :--- | :--- | :--- |
-| `POST` | `/api/complaints` | JWT | USER | Submit new complaint with AI assistance |
-| `GET` | `/api/complaints` | JWT | USER | List own complaints (supports filtering & pagination) |
-| `GET` | `/api/complaints/<id>` | JWT | Owner/Admin | View complaint details, timeline, and staff info |
-| `PUT` | `/api/complaints/<id>` | JWT | Owner | Edit complaint details (only permitted in `PENDING` state) |
-| `POST` | `/api/complaints/<id>/confirm` | JWT | Owner | Confirm satisfactory resolution (`RESOLVED` &rarr; `CONFIRMED`) |
-| `POST` | `/api/complaints/<id>/reject` | JWT | Owner | Reject resolution with reason (`RESOLVED` &rarr; `REOPENED`) |
-| `POST` | `/api/complaints/<id>/reopen` | JWT | Owner | Reopen confirmed ticket (`CONFIRMED` &rarr; `REOPENED`) |
+| Method | Endpoint | Auth | Description |
+|---|---|---|---|
+| `POST` | `/api/auth/register` | None | Register a user account |
+| `POST` | `/api/auth/login` | None | Authenticate and receive JWT |
+| `GET` | `/api/auth/me` | JWT | Get current user profile |
+| `POST` | `/api/auth/logout` | None/JWT | Logout client session |
 
-### 12.3 Administrator Endpoints
-| Method | Endpoint | Auth | Role | Description |
-| :--- | :--- | :--- | :--- | :--- |
-| `GET` | `/api/admin/stats` | JWT | ADMIN | Aggregate counts by status, priority, category, department |
-| `GET` | `/api/admin/complaints` | JWT | ADMIN | Multi-filter complaint search across the entire institution |
-| `GET` | `/api/admin/complaints/<id>`| JWT | ADMIN | Detailed review panel |
-| `PUT` | `/api/admin/complaints/<id>/review` | JWT | ADMIN | Move ticket from `PENDING` to `UNDER_REVIEW` |
-| `PUT` | `/api/admin/complaints/<id>/classification` | JWT | ADMIN | Override category, priority, or department |
-| `PUT` | `/api/admin/complaints/<id>/assign` | JWT | ADMIN | Assign/reassign ticket to a staff member |
-| `GET` | `/api/admin/staff` | JWT | ADMIN | Get list of active staff members |
-| `GET` | `/api/admin/users` | JWT | ADMIN | User management directory |
-| `PUT` | `/api/admin/users/<id>/status` | JWT | ADMIN | Activate / Deactivate user account |
+---
 
-### 12.4 Staff Endpoints
-| Method | Endpoint | Auth | Role | Description |
-| :--- | :--- | :--- | :--- | :--- |
-| `GET` | `/api/staff/complaints` | JWT | STAFF | View queue of assigned tickets |
-| `GET` | `/api/staff/complaints/<id>`| JWT | Assigned Staff | View ticket details |
-| `PUT` | `/api/staff/complaints/<id>/status` | JWT | Assigned Staff | Change status (e.g., mark `IN_PROGRESS`) |
-| `POST`| `/api/staff/complaints/<id>/updates`| JWT | Assigned Staff | Post progress notes to the audit timeline |
-| `PUT` | `/api/staff/complaints/<id>/resolve`| JWT | Assigned Staff | Mark resolved with required resolution remarks |
+### 12.2 Organization
+
+| Method | Endpoint | Auth | Description |
+|---|---|---|---|
+| `POST` | `/api/organizations` | Public/Backend controlled | Create an organization |
+| `GET` | `/api/organizations/<id>` | JWT | Get organization information |
+
+The exact organization endpoints depend on the current backend implementation.
+
+---
+
+### 12.3 User Complaint Endpoints
+
+| Method | Endpoint | Auth | Description |
+|---|---|---|---|
+| `POST` | `/api/complaints` | JWT | Submit a new complaint |
+| `GET` | `/api/complaints` | JWT | List the user's complaints |
+| `GET` | `/api/complaints/<id>` | JWT | View complaint details |
+| `PUT` | `/api/complaints/<id>` | JWT | Update complaint where permitted |
+| `POST` | `/api/complaints/<id>/confirm` | JWT | Confirm satisfactory resolution |
+| `POST` | `/api/complaints/<id>/reject` | JWT | Reject resolution / reopen complaint |
+
+---
+
+### 12.4 Administrator Endpoints
+
+| Method | Endpoint | Auth | Description |
+|---|---|---|---|
+| `GET` | `/api/admin/stats` | ADMIN | View organization complaint statistics |
+| `GET` | `/api/admin/complaints` | ADMIN | View organization complaints |
+| `GET` | `/api/admin/complaints/<id>` | ADMIN | View complaint details |
+| `PUT` | `/api/admin/complaints/<id>/review` | ADMIN | Review a complaint |
+| `PUT` | `/api/admin/complaints/<id>/classification` | ADMIN | Modify AI-suggested classification |
+| `PUT` | `/api/admin/complaints/<id>/status` | ADMIN | Manually change complaint status |
+| `GET` | `/api/admin/users` | ADMIN | View users in the organization |
+| `PUT` | `/api/admin/users/<id>/status` | ADMIN | Activate/deactivate a user |
+
+---
 
 ### 12.5 Feedback & Notification Endpoints
-| Method | Endpoint | Auth | Role | Description |
-| :--- | :--- | :--- | :--- | :--- |
-| `POST` | `/api/complaints/<id>/feedback` | JWT | Owner | Submit 1-5 star rating and comment |
-| `GET` | `/api/complaints/<id>/feedback` | JWT | Any | Get feedback for a complaint |
-| `GET` | `/api/notifications` | JWT | Any | Retrieve user's in-app notifications |
-| `PUT` | `/api/notifications/<id>/read` | JWT | Owner | Mark single notification as read |
-| `PUT` | `/api/notifications/read-all` | JWT | Owner | Mark all notifications as read |
+
+| Method | Endpoint | Auth | Description |
+|---|---|---|---|
+| `POST` | `/api/complaints/<id>/feedback` | JWT | Submit rating/comment |
+| `GET` | `/api/complaints/<id>/feedback` | JWT | View complaint feedback |
+| `GET` | `/api/notifications` | JWT | Get user's notifications |
+| `PUT` | `/api/notifications/<id>/read` | JWT | Mark notification as read |
+| `PUT` | `/api/notifications/read-all` | JWT | Mark all notifications as read |
+
+> API paths above are documentation targets. Keep them synchronized with the actual Flask routes in the project.
 
 ---
 
 ## 13. Testing
 
-Run the full automated test suite using Python's standard `unittest`:
+Run the backend test suite:
 
 ```bash
 cd backend
+
 uv run python -m unittest discover -s tests -p "test_*.py"
 ```
 
-The test suite validates:
-- **Authentication**: User registration, password hashing, token issuance, duplicate checks, validation errors.
-- **Access Control & Ownership**: Role verification, route blocking, and preventing users from viewing other users' private complaints.
-- **Complaint Submission & AI Fallback**: Ensuring complaint creation succeeds 100% even without external AI keys.
-- **End-to-End Workflow**: Filing &rarr; AI Analysis &rarr; Admin Review &rarr; Classification Override &rarr; Staff Assignment &rarr; In-Progress Status &rarr; Resolution &rarr; Rejection & Reopen &rarr; Re-resolution &rarr; User Confirmation &rarr; Feedback Ratings.
+The tests should cover areas such as:
+
+- Authentication
+- Password hashing
+- JWT authentication
+- User registration
+- Organization association
+- Access control
+- Complaint creation
+- AI extraction/fallback behavior
+- Admin complaint management
+- Complaint status changes
+- User confirmation/reopen flow
+- Notifications
+- Feedback
 
 ---
 
 ## 14. Future Roadmap
-- **Attachments**: Support for photo/evidence uploads (e.g. broken hardware photos).
-- **Email/SMS Alerts**: Integration with SendGrid/Twilio for external notifications.
-- **SLA Escalation**: Automatic alert triggers when high-priority tickets exceed 48 hours without staff assignment.
-- **Multi-tenant Support**: Support for multiple colleges or departments with segregated administration.
+
+Possible future improvements:
+
+- **File Attachments**
+  - Allow users to attach images or documents to complaints.
+
+- **Email Notifications**
+  - Send email notifications for important status changes.
+
+- **SLA Tracking**
+  - Track how long complaints remain unresolved.
+
+- **Advanced Analytics**
+  - Organization-level complaint trends and reports.
+
+- **Multi-Tenant Improvements**
+  - Stronger organization-level data isolation and configuration.
+
+- **AI Improvements**
+  - Better category and priority extraction.
+  - Improved summaries.
+  - AI-assisted duplicate complaint detection.
+
+- **Search & Filtering**
+  - Advanced complaint search and filtering.
+
+---
+
+## Project Philosophy
+
+The system follows a simple principle:
+
+> **AI should assist people, not replace administrative decisions.**
+
+The AI layer helps understand and structure complaint information, while the organization remains responsible for reviewing complaints, changing statuses, and deciding when a complaint is resolved.
+
+This keeps the system practical, explainable, and easy to manage.
+
+---
+
+## License
+
+This project is intended for educational, portfolio, and development purposes.
