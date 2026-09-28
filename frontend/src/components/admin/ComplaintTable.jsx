@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import {
   ArrowUpDown,
   Clock,
-  User,
   ChevronLeft,
   ChevronRight,
   Eye,
@@ -34,7 +33,6 @@ export const PRIORITY_STYLES = {
 export const STATUS_STYLES = {
   PENDING: 'bg-amber-50 text-amber-700 border-amber-200',
   UNDER_REVIEW: 'bg-purple-50 text-purple-700 border-purple-200',
-  ASSIGNED: 'bg-blue-50 text-blue-700 border-blue-200',
   IN_PROGRESS: 'bg-indigo-50 text-indigo-700 border-indigo-200',
   RESOLVED: 'bg-emerald-50 text-emerald-700 border-emerald-200',
   CONFIRMED: 'bg-teal-50 text-teal-700 border-teal-200',
@@ -168,7 +166,7 @@ const ComplaintTable = ({
                 </div>
               </th>
               <th className="py-3.5 px-4">Submitter</th>
-              <th className="py-3.5 px-4">Assigned Staff</th>
+
               <th
                 onClick={() => handleSort('status')}
                 className="py-3.5 px-4 cursor-pointer hover:text-slate-800 transition-colors"
@@ -194,11 +192,10 @@ const ComplaintTable = ({
                 <tr
                   key={c.id || c.ticket_id}
                   onClick={() => onSelectComplaint && onSelectComplaint(c)}
-                  className={`group transition-colors cursor-pointer ${
-                    isSelected
-                      ? 'bg-indigo-50/50 hover:bg-indigo-50/70'
-                      : 'hover:bg-slate-50/80'
-                  }`}
+                  className={`group transition-colors cursor-pointer ${isSelected
+                    ? 'bg-indigo-50/50 hover:bg-indigo-50/70'
+                    : 'hover:bg-slate-50/80'
+                    }`}
                 >
                   {/* Ticket ID */}
                   <td className="py-3 px-4 whitespace-nowrap">
@@ -261,19 +258,7 @@ const ComplaintTable = ({
                     </div>
                   </td>
 
-                  {/* Assigned Staff */}
-                  <td className="py-3 px-4 whitespace-nowrap">
-                    {c.staff_name ? (
-                      <span className="inline-flex items-center gap-1 text-xs font-medium text-slate-800 bg-slate-100 px-2 py-1 rounded-md border border-slate-200">
-                        <User className="w-3 h-3 text-slate-500" />
-                        {c.staff_name}
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-amber-50 text-amber-700 border border-amber-200">
-                        Unassigned
-                      </span>
-                    )}
-                  </td>
+
 
                   {/* Status */}
                   <td className="py-3 px-4 whitespace-nowrap">

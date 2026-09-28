@@ -2,6 +2,7 @@
 
 from flask import Blueprint, request
 from flask_jwt_extended import jwt_required
+from datetime import datetime, timedelta, timezone
 from app.extensions import db
 from app.models.user import User, UserRole
 from app.models.complaint import Complaint, ComplaintStatus
@@ -72,11 +73,62 @@ def get_admin_stats():
     for dept in ALLOWED_DEPARTMENTS:
         dept_counts[dept] = base_query.filter_by(department=dept).count()
 
+    # Active department distribution
+    active_dept_counts = {}
+
+    for dept in ALLOWED_DEPARTMENTS:
+        active_dept_counts[dept] = (
+            base_query
+            .filter(
+                Complaint.department == dept,
+                Complaint.status.notin_(
+                    [ComplaintStatus.RESOLVED, ComplaintStatus.CONFIRMED]
+                ),
+            )
+            .count()
+        )
+
     # High / Critical priority active count
     critical_or_high = base_query.filter(
         Complaint.priority.in_(["HIGH", "CRITICAL"]),
         Complaint.status.notin_([ComplaintStatus.RESOLVED, ComplaintStatus.CONFIRMED]),
     ).count()
+    
+    # Weekly trend for the last 6 weeks + current week
+    today = datetime.now(timezone.utc)
+    start_of_current_week = today - timedelta(days=today.weekday())
+
+    trend_data = []
+
+    for week_index in range(6, -1, -1):
+        week_start = start_of_current_week - timedelta(weeks=week_index)
+        week_end = week_start + timedelta(weeks=1)
+
+        # Complaints received during this week
+        received_count = base_query.filter(
+            Complaint.created_at >= week_start,
+            Complaint.created_at < week_end,
+        ).count()
+
+        # Complaints resolved during this week
+        # We use ComplaintUpdate because resolved_at is not reliably populated
+        resolved_count = ComplaintUpdate.query.filter(
+            ComplaintUpdate.organization_id == org_id,
+            ComplaintUpdate.status_to == ComplaintStatus.RESOLVED,
+            ComplaintUpdate.created_at >= week_start,
+            ComplaintUpdate.created_at < week_end,
+        ).count()
+
+        if week_index == 0:
+            label = "Current"
+        else:
+            label = f"Week {7 - week_index}"
+
+        trend_data.append({
+            "label": label,
+            "received": received_count,
+            "resolved": resolved_count,
+        })
 
     # User counts within organization
     total_users = User.query.filter_by(role=UserRole.USER, organization_id=org_id).count()
@@ -100,6 +152,8 @@ def get_admin_stats():
             "priority_distribution": priority_counts,
             "category_distribution": category_counts,
             "department_distribution": dept_counts,
+            "active_department_distribution": active_dept_counts,
+            "trend_data": trend_data,
         },
         status_code=200,
     )
@@ -377,10 +431,26 @@ def get_users_list():
     pagination = query.order_by(User.created_at.desc()).paginate(page=page, per_page=per_page, error_out=False)
 
     users_data = []
+
     for u in pagination.items:
         u_dict = u.to_dict()
-        # Include count of complaints filed by this user
-        u_dict["complaintCount"] = Complaint.query.filter_by(user_id=u.id, organization_id=org_id).count()
+
+        user_complaints = Complaint.query.filter_by(
+            user_id=u.id,
+            organization_id=org_id
+        )
+
+        total_complaints = user_complaints.count()
+
+        active_complaints = user_complaints.filter(
+            Complaint.status.notin_(
+                [ComplaintStatus.RESOLVED, ComplaintStatus.CONFIRMED]
+            )
+        ).count()
+
+        u_dict["complaints_count"] = total_complaints
+        u_dict["active_complaints"] = active_complaints
+
         users_data.append(u_dict)
 
     return api_response(

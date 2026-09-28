@@ -14,7 +14,6 @@ import {
 
 const ROLE_BADGES = {
   ADMIN: 'bg-rose-50 text-rose-700 border-rose-200',
-  STAFF: 'bg-indigo-50 text-indigo-700 border-indigo-200',
   USER: 'bg-slate-50 text-slate-700 border-slate-200',
 };
 
@@ -128,11 +127,10 @@ const UserTable = ({
                   {/* Account Status */}
                   <td className="py-3 px-4">
                     <span
-                      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border ${
-                        isActive
+                      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border ${isActive
                           ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                           : 'bg-rose-50 text-rose-700 border-rose-200'
-                      }`}
+                        }`}
                     >
                       {isActive ? (
                         <CheckCircle className="w-3 h-3 text-emerald-500" />
@@ -159,11 +157,10 @@ const UserTable = ({
                         <button
                           type="button"
                           onClick={() => onToggleStatus(u)}
-                          className={`px-2.5 py-1 text-xs font-medium rounded border transition-colors ${
-                            isActive
+                          className={`px-2.5 py-1 text-xs font-medium rounded border transition-colors ${isActive
                               ? 'text-rose-700 hover:bg-rose-50 border-slate-200 hover:border-rose-200'
                               : 'text-emerald-700 hover:bg-emerald-50 border-slate-200 hover:border-emerald-200'
-                          }`}
+                            }`}
                         >
                           {isActive ? 'Suspend' : 'Activate'}
                         </button>

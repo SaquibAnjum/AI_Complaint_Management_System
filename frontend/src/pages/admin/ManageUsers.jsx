@@ -1,17 +1,17 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { adminAPI } from '../../services/api';
-import { INITIAL_USERS, INITIAL_COMPLAINTS } from '../../data/adminData';
+import { INITIAL_COMPLAINTS } from '../../data/adminData';
 import AdminHeader from '../../components/admin/AdminHeader';
 import UserTable from '../../components/admin/UserTable';
 import UserDetailsDrawer from '../../components/admin/UserDetailsDrawer';
 import ConfirmDialog from '../../components/admin/ConfirmDialog';
 import { useToast } from '../../components/Toast';
-import { Search, X, Users, Shield, GraduationCap, Wrench, Download } from 'lucide-react';
+import { Search, X, Users, Shield, GraduationCap, Download } from 'lucide-react';
 
 const ManageUsers = () => {
   const { addToast } = useToast();
 
-  const [users, setUsers] = useState(INITIAL_USERS);
+  const [users, setUsers] = useState([]);
   const [complaints, setComplaints] = useState(INITIAL_COMPLAINTS);
   const [selectedUser, setSelectedUser] = useState(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -37,23 +37,18 @@ const ManageUsers = () => {
             id: u.id,
             name: u.name,
             email: u.email,
-            phone: u.phone || '+91 98765 00000',
+            phone: u.phone || '',
             role: u.role,
-            department: u.department || 'Campus Community',
-            room_or_hostel: u.room_or_hostel || 'Hostel Block',
+            department: u.department || '',
+            room_or_hostel: u.room_or_hostel || '',
             status: u.is_active === false ? 'SUSPENDED' : 'ACTIVE',
-            complaints_count: u.complaints_count || 1,
+            complaints_count: u.complaints_count || 0,
             active_complaints: u.active_complaints || 0,
-            joined_date: u.created_at ? u.created_at.split('T')[0] : '2025-01-15',
+            joined_date: u.created_at ? u.created_at.split('T')[0] : '',
           }));
 
-          const merged = [...apiUsers];
-          INITIAL_USERS.forEach((iu) => {
-            if (!merged.some((m) => m.id === iu.id || m.email === iu.email)) {
-              merged.push(iu);
-            }
-          });
-          setUsers(merged);
+
+          setUsers(apiUsers);
         }
       } catch (err) {
         console.warn('Backend users load note:', err);
@@ -157,14 +152,13 @@ const ManageUsers = () => {
   const totalCount = users.length;
   const activeCount = users.filter((u) => u.status === 'ACTIVE').length;
   const suspendedCount = users.filter((u) => u.status === 'SUSPENDED').length;
-  const staffOrAdminCount = users.filter((u) => u.role !== 'USER').length;
-
+  const adminCount = users.filter((u) => u.role === 'ADMIN').length;
   return (
     <div className="page-container py-6 max-w-7xl mx-auto space-y-6">
       {/* Header */}
       <AdminHeader
         title="User Directory"
-        subtitle="Manage student, staff, and administrative accounts with contact profiles and grievance metrics."
+        subtitle="Manage user and administrative accounts with contact profiles and complaint activity."
         breadcrumbs={[
           { label: 'Admin', href: '/admin/dashboard' },
           { label: 'User Directory' },
@@ -208,10 +202,10 @@ const ManageUsers = () => {
 
         <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-[0_1px_3px_0_rgba(0,0,0,0.04)]">
           <p className="text-xs font-semibold uppercase tracking-wider text-indigo-600">
-            Staff & Admins
+            Administrators
           </p>
-          <p className="text-2xl font-bold text-slate-900 mt-1">{staffOrAdminCount}</p>
-          <span className="text-[11px] text-indigo-600 font-medium">Resolution officers</span>
+          <p className="text-2xl font-bold text-slate-900 mt-1">{adminCount}</p>
+          <span className="text-[11px] text-indigo-600 font-medium">Administrative accounts</span>
         </div>
       </div>
 
@@ -246,8 +240,7 @@ const ManageUsers = () => {
               className="px-3 py-2 text-xs font-medium bg-white border border-slate-200 rounded-lg text-slate-700 hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
             >
               <option value="ALL">All Roles</option>
-              <option value="USER">Students / Residents</option>
-              <option value="STAFF">Staff Officers</option>
+              <option value="USER">Users</option>
               <option value="ADMIN">Administrators</option>
             </select>
 
@@ -296,11 +289,10 @@ const ManageUsers = () => {
             ? 'Suspend User Account'
             : 'Reactivate User Account'
         }
-        message={`Are you sure you want to ${
-          confirmDialog.newStatus === 'SUSPENDED'
-            ? 'suspend access for'
-            : 'reactivate access for'
-        } ${confirmDialog.user?.name} (${confirmDialog.user?.email})?`}
+        message={`Are you sure you want to ${confirmDialog.newStatus === 'SUSPENDED'
+          ? 'suspend access for'
+          : 'reactivate access for'
+          } ${confirmDialog.user?.name} (${confirmDialog.user?.email})?`}
         confirmLabel={
           confirmDialog.newStatus === 'SUSPENDED'
             ? 'Yes, Suspend Account'

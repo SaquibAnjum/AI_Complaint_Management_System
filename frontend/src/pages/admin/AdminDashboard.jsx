@@ -3,7 +3,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import { adminAPI } from '../../services/api';
 import {
   INITIAL_STATS,
-  INITIAL_COMPLAINTS,
   INITIAL_ACTIVITIES,
 } from '../../data/adminData';
 import AdminHeader from '../../components/admin/AdminHeader';
@@ -32,7 +31,7 @@ const AdminDashboard = () => {
   const { addToast } = useToast();
 
   const [stats, setStats] = useState(INITIAL_STATS);
-  const [complaints, setComplaints] = useState(INITIAL_COMPLAINTS);
+  const [complaints, setComplaints] = useState([]);
   const [activities, setActivities] = useState(INITIAL_ACTIVITIES);
   const [selectedStatusFilter, setSelectedStatusFilter] = useState('ALL');
   const [selectedComplaint, setSelectedComplaint] = useState(null);
@@ -62,23 +61,35 @@ const AdminDashboard = () => {
         ]);
 
         if (statsRes.status === 'fulfilled' && statsRes.value?.success && statsRes.value?.data) {
+
           setStats((prev) => ({
             ...prev,
             summary: { ...prev.summary, ...statsRes.value.data.summary },
+
+            statusDistribution: statsRes.value.data.status_distribution,
+
+            departmentWorkload: Object.entries(
+              statsRes.value.data.active_department_distribution || {}
+            )
+              .filter(([, count]) => count > 0)
+              .map(([department, activeTickets]) => ({
+                department,
+                activeTickets,
+              }))
+              .sort((a, b) => b.activeTickets - a.activeTickets),
+
+            trendData: statsRes.value.data.trend_data || [],
           }));
         }
 
-        if (compRes.status === 'fulfilled' && compRes.value?.success && compRes.value?.data?.complaints) {
+        if (
+          compRes.status === 'fulfilled' &&
+          compRes.value?.success &&
+          compRes.value?.data?.complaints
+        ) {
           const apiComplaints = compRes.value.data.complaints;
-          if (apiComplaints.length > 0) {
-            const merged = [...apiComplaints];
-            INITIAL_COMPLAINTS.forEach((item) => {
-              if (!merged.some((m) => m.id === item.id || m.ticket_id === item.ticket_id)) {
-                merged.push(item);
-              }
-            });
-            setComplaints(merged);
-          }
+
+          setComplaints(apiComplaints);
         }
 
         if (orgRes.status === 'fulfilled' && orgRes.value?.success && orgRes.value?.data?.organization) {
