@@ -3,7 +3,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import { complaintsAPI } from '../../services/api';
 import { useToast } from '../../components/Toast';
 import { useAuth } from '../../context/AuthContext';
-import { INITIAL_USER_COMPLAINTS } from '../../data/userData';
 import UserHeader from '../../components/user/UserHeader';
 import {
   FileText,
@@ -158,52 +157,29 @@ const SubmitComplaint = () => {
         category: formData.category,
         priority: formData.priority,
         location: formData.location.trim() || undefined,
-        department: formData.category,
       };
-
-      let createdTicket = null;
 
       try {
         const res = await complaintsAPI.create(payload);
-        if (res.success && res.data?.complaint) {
-          createdTicket = res.data.complaint;
+
+        if (!res.success || !res.data?.complaint) {
+          throw new Error(res.message || 'Complaint submission failed');
         }
+
+        const createdTicket = res.data.complaint;
+
+        addToast('Complaint submitted successfully! Ticket queued.', 'success');
+        setSubmittedTicket(createdTicket);
       } catch (err) {
-        console.warn('Backend submission fallback to client-side store:', err);
+        console.error('Complaint submission failed:', err);
+
+        addToast(
+          err?.message || 'Failed to submit complaint. Please try again.',
+          'error'
+        );
+      } finally {
+        setSubmitting(false);
       }
-
-      // Generate realistic production ticket object
-      const randomNum = Math.floor(1000 + Math.random() * 9000);
-      const generatedTicket = createdTicket || {
-        id: randomNum,
-        ticket_id: `CMP-${randomNum}`,
-        title: formData.title.trim(),
-        description: formData.description.trim(),
-        category: formData.category,
-        priority: formData.priority,
-        department: formData.category === 'Hostel' ? 'Hostel Administration' : formData.category,
-        location: formData.location.trim() || 'Campus Main Block',
-        status: 'PENDING',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        attachment_name: attachedFile ? attachedFile.name : null,
-        attachment_size: attachedFile ? `${(attachedFile.size / (1024 * 1024)).toFixed(2)} MB` : null,
-        additional_info: formData.additionalInfo.trim() || null,
-        timeline: [
-          {
-            action: 'Ticket Registered',
-            by: user?.name || 'Saquib (User)',
-            time: 'Just now',
-            note: 'Complaint submitted through user portal. Queued for triage.',
-          },
-        ],
-      };
-
-      // Also persist to mock store in memory so My Complaints sees it
-      INITIAL_USER_COMPLAINTS.unshift(generatedTicket);
-
-      addToast('Complaint submitted successfully! Ticket queued.', 'success');
-      setSubmittedTicket(generatedTicket);
     } catch (error) {
       addToast('An error occurred while submitting your complaint.', 'error');
     } finally {
@@ -341,9 +317,8 @@ const SubmitComplaint = () => {
                 value={formData.title}
                 onChange={(e) => handleChange('title', e.target.value)}
                 placeholder="Briefly describe your issue (e.g. Water leakage in Hostel Block B - Room 304)"
-                className={`w-full text-sm px-3.5 py-2.5 rounded-lg border ${
-                  fieldErrors.title ? 'border-rose-400 focus:ring-rose-500' : 'border-slate-300 focus:border-indigo-500'
-                } bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-colors`}
+                className={`w-full text-sm px-3.5 py-2.5 rounded-lg border ${fieldErrors.title ? 'border-rose-400 focus:ring-rose-500' : 'border-slate-300 focus:border-indigo-500'
+                  } bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-colors`}
               />
               {fieldErrors.title ? (
                 <p className="text-xs text-rose-600 flex items-center gap-1">
@@ -370,11 +345,10 @@ const SubmitComplaint = () => {
                       key={cat.id}
                       type="button"
                       onClick={() => handleChange('category', cat.id)}
-                      className={`p-3 rounded-lg border text-left transition-all ${
-                        isSelected
-                          ? 'border-indigo-600 bg-indigo-50/60 ring-1 ring-indigo-600'
-                          : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/50'
-                      }`}
+                      className={`p-3 rounded-lg border text-left transition-all ${isSelected
+                        ? 'border-indigo-600 bg-indigo-50/60 ring-1 ring-indigo-600'
+                        : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/50'
+                        }`}
                     >
                       <span className={`block text-xs font-semibold ${isSelected ? 'text-indigo-900' : 'text-slate-800'}`}>
                         {cat.label}
@@ -406,11 +380,10 @@ const SubmitComplaint = () => {
                       key={pri.id}
                       type="button"
                       onClick={() => handleChange('priority', pri.id)}
-                      className={`p-3 rounded-lg border text-left transition-all ${
-                        isSelected
-                          ? 'border-indigo-600 bg-indigo-50/40 ring-1 ring-indigo-600'
-                          : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/50'
-                      }`}
+                      className={`p-3 rounded-lg border text-left transition-all ${isSelected
+                        ? 'border-indigo-600 bg-indigo-50/40 ring-1 ring-indigo-600'
+                        : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/50'
+                        }`}
                     >
                       <div className="flex items-center justify-between mb-1">
                         <span className={`text-xs font-semibold ${isSelected ? 'text-indigo-900' : 'text-slate-800'}`}>
@@ -435,9 +408,8 @@ const SubmitComplaint = () => {
                 <label htmlFor="complaint-desc" className="block text-xs font-semibold text-slate-900 uppercase tracking-wider">
                   4. Detailed Description <span className="text-rose-500">*</span>
                 </label>
-                <span className={`text-xs font-mono ${
-                  formData.description.length > MAX_CHARS ? 'text-rose-600 font-semibold' : 'text-slate-500'
-                }`}>
+                <span className={`text-xs font-mono ${formData.description.length > MAX_CHARS ? 'text-rose-600 font-semibold' : 'text-slate-500'
+                  }`}>
                   {formData.description.length} / {MAX_CHARS} characters
                 </span>
               </div>
@@ -451,9 +423,8 @@ const SubmitComplaint = () => {
                   }
                 }}
                 placeholder="Explain what happened in as much detail as possible. Include exact room number, floor, when the issue started, and any immediate disruption caused..."
-                className={`w-full text-sm p-3.5 rounded-lg border ${
-                  fieldErrors.description ? 'border-rose-400 focus:ring-rose-500' : 'border-slate-300 focus:border-indigo-500'
-                } bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-colors leading-relaxed`}
+                className={`w-full text-sm p-3.5 rounded-lg border ${fieldErrors.description ? 'border-rose-400 focus:ring-rose-500' : 'border-slate-300 focus:border-indigo-500'
+                  } bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-colors leading-relaxed`}
               />
               {fieldErrors.description ? (
                 <p className="text-xs text-rose-600 flex items-center gap-1">
@@ -543,11 +514,10 @@ const SubmitComplaint = () => {
                   }}
                   onDragLeave={() => setIsDragging(false)}
                   onDrop={handleFileDrop}
-                  className={`border-2 border-dashed rounded-xl p-6 text-center transition-colors ${
-                    isDragging
-                      ? 'border-indigo-500 bg-indigo-50/50'
-                      : 'border-slate-200 hover:border-slate-300 bg-slate-50/50'
-                  }`}
+                  className={`border-2 border-dashed rounded-xl p-6 text-center transition-colors ${isDragging
+                    ? 'border-indigo-500 bg-indigo-50/50'
+                    : 'border-slate-200 hover:border-slate-300 bg-slate-50/50'
+                    }`}
                 >
                   <UploadCloud className="w-8 h-8 text-slate-400 mx-auto mb-2" />
                   <p className="text-xs font-medium text-slate-700">

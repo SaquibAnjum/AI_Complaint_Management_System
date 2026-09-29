@@ -130,6 +130,38 @@ def get_admin_stats():
             "resolved": resolved_count,
         })
 
+    # Recent system audit activity
+    recent_updates = (
+        ComplaintUpdate.query
+        .filter_by(organization_id=org_id)
+        .order_by(ComplaintUpdate.created_at.desc())
+        .limit(6)
+        .all()
+    )
+
+    recent_activity = []
+
+    for update in recent_updates:
+        if update.status_from is None:
+            activity_type = "COMPLAINT_CREATED"
+        elif update.status_to == ComplaintStatus.RESOLVED:
+            activity_type = "COMPLAINT_RESOLVED"
+        else:
+            activity_type = "STATUS_CHANGED"
+
+        recent_activity.append({
+            "id": update.id,
+            "type": activity_type,
+            "description": update.remark,
+            "actor": update.user.name if update.user else "System",
+            "ticket_id": f"CMP-{update.complaint_id}",
+            "created_at": (
+                update.created_at.isoformat()
+                if update.created_at
+                else None
+            ),
+        })
+
     # User counts within organization
     total_users = User.query.filter_by(role=UserRole.USER, organization_id=org_id).count()
 
@@ -154,6 +186,7 @@ def get_admin_stats():
             "department_distribution": dept_counts,
             "active_department_distribution": active_dept_counts,
             "trend_data": trend_data,
+            "recent_activity": recent_activity,
         },
         status_code=200,
     )

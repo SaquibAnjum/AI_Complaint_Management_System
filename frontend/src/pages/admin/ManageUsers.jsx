@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { adminAPI } from '../../services/api';
-import { INITIAL_COMPLAINTS } from '../../data/adminData';
 import AdminHeader from '../../components/admin/AdminHeader';
 import UserTable from '../../components/admin/UserTable';
 import UserDetailsDrawer from '../../components/admin/UserDetailsDrawer';
@@ -12,7 +11,7 @@ const ManageUsers = () => {
   const { addToast } = useToast();
 
   const [users, setUsers] = useState([]);
-  const [complaints, setComplaints] = useState(INITIAL_COMPLAINTS);
+  const [complaints, setComplaints] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
@@ -32,6 +31,14 @@ const ManageUsers = () => {
     const loadUsers = async () => {
       try {
         const res = await adminAPI.getUsers({ per_page: 50 });
+        const complaintsRes = await adminAPI.getComplaints({ per_page: 100 });
+
+        if (
+          complaintsRes.success &&
+          complaintsRes.data?.complaints
+        ) {
+          setComplaints(complaintsRes.data.complaints);
+        }
         if (res.success && res.data?.users && res.data.users.length > 0) {
           const apiUsers = res.data.users.map((u) => ({
             id: u.id,

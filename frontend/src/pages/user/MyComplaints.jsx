@@ -2,7 +2,6 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { complaintsAPI, feedbackAPI } from '../../services/api';
-import { INITIAL_USER_COMPLAINTS } from '../../data/userData';
 import UserHeader from '../../components/user/UserHeader';
 import UserFilterToolbar from '../../components/user/UserFilterToolbar';
 import UserComplaintDrawer from '../../components/user/UserComplaintDrawer';
@@ -46,7 +45,7 @@ const MyComplaints = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const { addToast } = useToast();
 
-  const [complaints, setComplaints] = useState(INITIAL_USER_COMPLAINTS);
+  const [complaints, setComplaints] = useState([]);
   const [loading, setLoading] = useState(false);
   const [selectedComplaint, setSelectedComplaint] = useState(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -72,20 +71,18 @@ const MyComplaints = () => {
   useEffect(() => {
     const loadComplaints = async () => {
       setLoading(true);
+
       try {
         const res = await complaintsAPI.list({ per_page: 30 });
-        if (res.success && res.data?.complaints && res.data.complaints.length > 0) {
-          const apiList = res.data.complaints;
-          const merged = [...apiList];
-          INITIAL_USER_COMPLAINTS.forEach((item) => {
-            if (!merged.some((m) => m.id === item.id || m.ticket_id === item.ticket_id)) {
-              merged.push(item);
-            }
-          });
-          setComplaints(merged);
+
+        if (res.success && res.data?.complaints) {
+          setComplaints(res.data.complaints);
+        } else {
+          setComplaints([]);
         }
       } catch (err) {
-        console.warn('Backend unavailable, rendering user complaint store:', err);
+        console.error('Failed to load user complaints:', err);
+        setComplaints([]);
       } finally {
         setLoading(false);
       }
@@ -279,11 +276,10 @@ const MyComplaints = () => {
         <button
           type="button"
           onClick={() => handleFilterChange('status', 'ALL')}
-          className={`p-3 rounded-lg border text-left transition-all ${
-            filters.status === 'ALL'
-              ? 'border-indigo-600 bg-indigo-50/70 ring-1 ring-indigo-600'
-              : 'border-slate-200 bg-white hover:border-slate-300'
-          }`}
+          className={`p-3 rounded-lg border text-left transition-all ${filters.status === 'ALL'
+            ? 'border-indigo-600 bg-indigo-50/70 ring-1 ring-indigo-600'
+            : 'border-slate-200 bg-white hover:border-slate-300'
+            }`}
         >
           <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block">
             All Tickets
@@ -297,11 +293,10 @@ const MyComplaints = () => {
         <button
           type="button"
           onClick={() => handleFilterChange('status', 'PENDING')}
-          className={`p-3 rounded-lg border text-left transition-all ${
-            filters.status === 'PENDING'
-              ? 'border-amber-500 bg-amber-50/70 ring-1 ring-amber-500'
-              : 'border-slate-200 bg-white hover:border-slate-300'
-          }`}
+          className={`p-3 rounded-lg border text-left transition-all ${filters.status === 'PENDING'
+            ? 'border-amber-500 bg-amber-50/70 ring-1 ring-amber-500'
+            : 'border-slate-200 bg-white hover:border-slate-300'
+            }`}
         >
           <span className="text-[11px] font-semibold text-amber-700 uppercase tracking-wider block">
             Pending
@@ -315,11 +310,10 @@ const MyComplaints = () => {
         <button
           type="button"
           onClick={() => handleFilterChange('status', 'IN_PROGRESS')}
-          className={`p-3 rounded-lg border text-left transition-all ${
-            filters.status === 'IN_PROGRESS'
-              ? 'border-blue-500 bg-blue-50/70 ring-1 ring-blue-500'
-              : 'border-slate-200 bg-white hover:border-slate-300'
-          }`}
+          className={`p-3 rounded-lg border text-left transition-all ${filters.status === 'IN_PROGRESS'
+            ? 'border-blue-500 bg-blue-50/70 ring-1 ring-blue-500'
+            : 'border-slate-200 bg-white hover:border-slate-300'
+            }`}
         >
           <span className="text-[11px] font-semibold text-blue-700 uppercase tracking-wider block">
             In Progress
@@ -333,11 +327,10 @@ const MyComplaints = () => {
         <button
           type="button"
           onClick={() => handleFilterChange('status', 'RESOLVED')}
-          className={`p-3 rounded-lg border text-left transition-all ${
-            filters.status === 'RESOLVED'
-              ? 'border-emerald-500 bg-emerald-50/70 ring-1 ring-emerald-500'
-              : 'border-slate-200 bg-white hover:border-slate-300'
-          }`}
+          className={`p-3 rounded-lg border text-left transition-all ${filters.status === 'RESOLVED'
+            ? 'border-emerald-500 bg-emerald-50/70 ring-1 ring-emerald-500'
+            : 'border-slate-200 bg-white hover:border-slate-300'
+            }`}
         >
           <span className="text-[11px] font-semibold text-emerald-700 uppercase tracking-wider block">
             Resolved
@@ -351,11 +344,10 @@ const MyComplaints = () => {
         <button
           type="button"
           onClick={() => handleFilterChange('status', 'REOPENED')}
-          className={`p-3 rounded-lg border text-left transition-all col-span-2 sm:col-span-1 ${
-            filters.status === 'REOPENED'
-              ? 'border-rose-500 bg-rose-50/70 ring-1 ring-rose-500'
-              : 'border-slate-200 bg-white hover:border-slate-300'
-          }`}
+          className={`p-3 rounded-lg border text-left transition-all col-span-2 sm:col-span-1 ${filters.status === 'REOPENED'
+            ? 'border-rose-500 bg-rose-50/70 ring-1 ring-rose-500'
+            : 'border-slate-200 bg-white hover:border-slate-300'
+            }`}
         >
           <span className="text-[11px] font-semibold text-rose-700 uppercase tracking-wider block">
             Reopened

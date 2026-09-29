@@ -32,7 +32,7 @@ const UserLatestUpdates = ({ updates = [], onSelectTicket, maxItems = 4 }) => {
             <span>Latest Updates</span>
           </h3>
           <p className="text-xs text-slate-500 mt-0.5">
-            Real-time status changes and staff remarks on your tickets
+            Real-time status changes and updates on your tickets
           </p>
         </div>
       </div>

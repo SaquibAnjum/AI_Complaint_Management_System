@@ -1,9 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { adminAPI } from '../../services/api';
-import {
-  INITIAL_COMPLAINTS,
-} from '../../data/adminData';
+
 import AdminHeader from '../../components/admin/AdminHeader';
 import FilterToolbar from '../../components/admin/FilterToolbar';
 import ComplaintTable from '../../components/admin/ComplaintTable';
@@ -34,7 +32,7 @@ const ManageComplaints = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const { addToast } = useToast();
 
-  const [complaints, setComplaints] = useState(INITIAL_COMPLAINTS);
+  const [complaints, setComplaints] = useState([]);
   const [selectedComplaint, setSelectedComplaint] = useState(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
@@ -58,16 +56,7 @@ const ManageComplaints = () => {
         const compRes = await adminAPI.getComplaints({ per_page: 50 });
 
         if (compRes?.success && compRes?.data?.complaints) {
-          const apiItems = compRes.data.complaints;
-          if (apiItems.length > 0) {
-            const merged = [...apiItems];
-            INITIAL_COMPLAINTS.forEach((m) => {
-              if (!merged.some((a) => a.id === m.id || a.ticket_id === m.ticket_id)) {
-                merged.push(m);
-              }
-            });
-            setComplaints(merged);
-          }
+          setComplaints(compRes.data.complaints);
         }
       } catch (err) {
         console.warn('Backend connection note:', err);
@@ -212,11 +201,10 @@ const ManageComplaints = () => {
             <button
               key={q.status}
               onClick={() => setStatusFilter(q.status)}
-              className={`px-3 py-1.5 text-xs font-medium rounded-full border transition-all whitespace-nowrap ${
-                isActive
+              className={`px-3 py-1.5 text-xs font-medium rounded-full border transition-all whitespace-nowrap ${isActive
                   ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm'
                   : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300 hover:bg-slate-50'
-              }`}
+                }`}
             >
               {q.label}
             </button>

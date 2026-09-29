@@ -5,7 +5,6 @@ import {
   Check,
   MapPin,
   Clock,
-  User,
   MessageSquare,
   CheckCircle2,
   AlertTriangle,
@@ -81,8 +80,17 @@ const UserComplaintDrawer = ({
   const isResolved = complaint.status === 'RESOLVED';
   const isConfirmed = complaint.status === 'CONFIRMED';
   const responses = complaint.responses || [];
-  const timeline = complaint.timeline || [];
-
+  const timeline = (complaint.updates || complaint.timeline || []).map((item) => ({
+    action:
+      item.status_to
+        ? `Status changed to ${item.status_to.replace('_', ' ')}`
+        : 'Complaint updated',
+    time: item.created_at
+      ? new Date(item.created_at).toLocaleString()
+      : '',
+    note: item.remark || '',
+    by: item.user_name || item.user?.name || 'Administrator',
+  }));
   return (
     <div className="fixed inset-0 z-50 overflow-hidden">
       {/* Backdrop */}
@@ -167,21 +175,19 @@ const UserComplaintDrawer = ({
           <div className="flex border-b border-slate-200 px-5 bg-white text-xs font-medium text-slate-600 gap-6">
             <button
               onClick={() => setActiveTab('overview')}
-              className={`py-3 border-b-2 transition-colors ${
-                activeTab === 'overview'
-                  ? 'border-indigo-600 text-indigo-600 font-semibold'
-                  : 'border-transparent hover:text-slate-900'
-              }`}
+              className={`py-3 border-b-2 transition-colors ${activeTab === 'overview'
+                ? 'border-indigo-600 text-indigo-600 font-semibold'
+                : 'border-transparent hover:text-slate-900'
+                }`}
             >
               Overview & Details
             </button>
             <button
               onClick={() => setActiveTab('timeline')}
-              className={`py-3 border-b-2 transition-colors flex items-center gap-1.5 ${
-                activeTab === 'timeline'
-                  ? 'border-indigo-600 text-indigo-600 font-semibold'
-                  : 'border-transparent hover:text-slate-900'
-              }`}
+              className={`py-3 border-b-2 transition-colors flex items-center gap-1.5 ${activeTab === 'timeline'
+                ? 'border-indigo-600 text-indigo-600 font-semibold'
+                : 'border-transparent hover:text-slate-900'
+                }`}
             >
               <History className="w-3.5 h-3.5" />
               <span>Event Timeline ({timeline.length})</span>
@@ -189,11 +195,10 @@ const UserComplaintDrawer = ({
             {isResolved && (
               <button
                 onClick={() => setActiveTab('feedback')}
-                className={`py-3 border-b-2 transition-colors flex items-center gap-1.5 ${
-                  activeTab === 'feedback'
-                    ? 'border-indigo-600 text-indigo-600 font-semibold'
-                    : 'border-transparent hover:text-slate-900'
-                }`}
+                className={`py-3 border-b-2 transition-colors flex items-center gap-1.5 ${activeTab === 'feedback'
+                  ? 'border-indigo-600 text-indigo-600 font-semibold'
+                  : 'border-transparent hover:text-slate-900'
+                  }`}
               >
                 <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
                 <span>Verification & Rating</span>
@@ -240,31 +245,7 @@ const UserComplaintDrawer = ({
                     </div>
                   </div>
 
-                  {/* Assigned Staff Card */}
-                  <div className="bg-white rounded-xl border border-slate-200 p-4 text-xs space-y-2">
-                    <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2">
-                      Assigned Resolution Officer
-                    </p>
-                    {complaint.assigned_staff || complaint.staff_name ? (
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-9 h-9 rounded-full bg-indigo-50 border border-indigo-200 text-indigo-700 font-bold text-xs flex items-center justify-center">
-                          <User className="w-4 h-4" />
-                        </div>
-                        <div>
-                          <p className="font-semibold text-slate-900 text-xs">
-                            {complaint.assigned_staff || complaint.staff_name}
-                          </p>
-                          <p className="text-[11px] text-slate-500">
-                            {complaint.staff_department || complaint.department || 'Field Technician'}
-                          </p>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="p-3 bg-amber-50 rounded-lg border border-amber-200 text-amber-800 text-[11px]">
-                        Currently in administrative queue awaiting technician assignment.
-                      </div>
-                    )}
-                  </div>
+
                 </div>
 
                 {/* Attachment info if present */}
@@ -286,44 +267,6 @@ const UserComplaintDrawer = ({
                     </span>
                   </div>
                 )}
-
-                {/* Staff Responses / Remarks */}
-                <div>
-                  <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">
-                    Technician Progress Updates ({responses.length})
-                  </h4>
-                  {responses.length > 0 ? (
-                    <div className="space-y-2.5">
-                      {responses.map((r, idx) => (
-                        <div
-                          key={idx}
-                          className="bg-white rounded-xl border border-slate-200 p-4 text-xs shadow-2xs"
-                        >
-                          <div className="flex items-center justify-between mb-1">
-                            <div className="flex items-center gap-2">
-                              <span className="font-semibold text-slate-900">
-                                {r.author}
-                              </span>
-                              <span className="text-[10px] bg-indigo-50 text-indigo-700 px-1.5 py-0.5 rounded font-medium border border-indigo-100">
-                                {r.role || 'Staff'}
-                              </span>
-                            </div>
-                            <span className="text-[11px] text-slate-400">
-                              {r.time}
-                            </span>
-                          </div>
-                          <p className="text-slate-700 leading-relaxed whitespace-pre-wrap mt-1">
-                            {r.text}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="p-4 text-center bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-400">
-                      No remarks added yet. You will receive real-time notifications as technicians inspect and repair.
-                    </div>
-                  )}
-                </div>
 
                 {/* Resolution Confirmation Card (If Resolved) */}
                 {isResolved && (
@@ -439,11 +382,10 @@ const UserComplaintDrawer = ({
                           className="p-1 hover:scale-110 transition-transform"
                         >
                           <Star
-                            className={`w-6 h-6 ${
-                              star <= rating
-                                ? 'text-amber-400 fill-amber-400'
-                                : 'text-slate-200'
-                            }`}
+                            className={`w-6 h-6 ${star <= rating
+                              ? 'text-amber-400 fill-amber-400'
+                              : 'text-slate-200'
+                              }`}
                           />
                         </button>
                       ))}

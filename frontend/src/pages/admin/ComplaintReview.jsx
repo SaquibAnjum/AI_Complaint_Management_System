@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { adminAPI } from '../../services/api';
-import { INITIAL_COMPLAINTS } from '../../data/adminData';
 import { useToast } from '../../components/Toast';
 import { ComplaintStatusBadge, PriorityBadge } from '../../components/ComplaintStatusBadge';
 import ComplaintTimeline from '../../components/ComplaintTimeline';
@@ -41,11 +40,7 @@ const ComplaintReview = () => {
       if (compRes?.success && compRes?.data?.complaint) {
         foundComplaint = compRes.data.complaint;
       } else {
-        // Fallback to initial mock data store
-        foundComplaint =
-          INITIAL_COMPLAINTS.find(
-            (c) => String(c.id) === String(id) || String(c.ticket_id) === String(id)
-          ) || INITIAL_COMPLAINTS[0];
+        foundComplaint = null;
       }
 
       if (foundComplaint) {
@@ -56,12 +51,8 @@ const ComplaintReview = () => {
         setStatus(foundComplaint.status || 'PENDING');
       }
     } catch (err) {
-      console.warn('Error loading complaint review details, falling back:', err);
-      const fallback =
-        INITIAL_COMPLAINTS.find(
-          (c) => String(c.id) === String(id) || String(c.ticket_id) === String(id)
-        ) || INITIAL_COMPLAINTS[0];
-      setComplaint(fallback);
+      console.warn('Error loading complaint review details:', err);
+      setComplaint(null);
     } finally {
       setLoading(false);
     }

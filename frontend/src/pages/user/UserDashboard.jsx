@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { complaintsAPI, feedbackAPI } from '../../services/api';
+import {
+  complaintsAPI,
+  feedbackAPI,
+  notificationsAPI,
+} from '../../services/api';
 import {
   INITIAL_USER_PROFILE,
-  INITIAL_USER_COMPLAINTS,
-  INITIAL_USER_UPDATES,
 } from '../../data/userData';
 import UserHeader from '../../components/user/UserHeader';
 import UserStatCard from '../../components/user/UserStatCard';
@@ -30,8 +32,8 @@ const UserDashboard = () => {
   const navigate = useNavigate();
   const { addToast } = useToast();
 
-  const [complaints, setComplaints] = useState(INITIAL_USER_COMPLAINTS);
-  const [updates, setUpdates] = useState(INITIAL_USER_UPDATES);
+  const [complaints, setComplaints] = useState([]);
+  const [updates, setUpdates] = useState([]);
   const [selectedComplaint, setSelectedComplaint] = useState(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [activeStatusFilter, setActiveStatusFilter] = useState('ALL');
@@ -40,25 +42,70 @@ const UserDashboard = () => {
 
   // Load from API if backend server is responsive
   useEffect(() => {
-    const loadUserComplaints = async () => {
+    const loadUserDashboardData = async () => {
       try {
-        const res = await complaintsAPI.list({ per_page: 20 });
-        if (res.success && res.data?.complaints && res.data.complaints.length > 0) {
-          const apiComplaints = res.data.complaints;
-          const merged = [...apiComplaints];
-          INITIAL_USER_COMPLAINTS.forEach((item) => {
-            if (!merged.some((m) => m.id === item.id || m.ticket_id === item.ticket_id)) {
-              merged.push(item);
+        const [complaintsRes, notificationsRes] = await Promise.all([
+          complaintsAPI.list({ per_page: 20 }),
+          notificationsAPI.list(false),
+        ]);
+
+        if (complaintsRes.success && complaintsRes.data?.complaints) {
+          setComplaints(complaintsRes.data.complaints);
+        }
+
+        if (
+          notificationsRes.success &&
+          notificationsRes.data?.notifications
+        ) {
+          const complaintList = complaintsRes.data?.complaints || [];
+
+          const formattedUpdates = notificationsRes.data.notifications.map(
+            (notification) => {
+              const relatedComplaint = complaintList.find(
+                (complaint) =>
+                  complaint.id === notification.complaint_id
+              );
+
+              const message = notification.message || '';
+              const lowerMessage = message.toLowerCase();
+
+              let type = 'REMARK';
+
+              if (lowerMessage.includes('resolved')) {
+                type = 'RESOLVED';
+              } else if (
+                lowerMessage.includes('progress') ||
+                lowerMessage.includes('in-progress')
+              ) {
+                type = 'IN_PROGRESS';
+              } else if (lowerMessage.includes('assigned')) {
+                type = 'ASSIGNED';
+              }
+
+              return {
+                id: notification.id,
+                type,
+                activity: message,
+                ticket_id:
+                  relatedComplaint?.ticket_id ||
+                  (notification.complaint_id
+                    ? `CMP-${notification.complaint_id}`
+                    : null),
+                time: notification.created_at
+                  ? new Date(notification.created_at).toLocaleString()
+                  : '',
+              };
             }
-          });
-          setComplaints(merged);
+          );
+
+          setUpdates(formattedUpdates);
         }
       } catch (err) {
-        console.warn('Using user mock data store:', err);
+        console.error('Failed to load user dashboard data:', err);
       }
     };
 
-    loadUserComplaints();
+    loadUserDashboardData();
   }, []);
 
   // Compute metrics
@@ -73,8 +120,21 @@ const UserDashboard = () => {
     (c) => c.status === 'RESOLVED' || c.status === 'CONFIRMED'
   ).length;
 
-  const handleSelectComplaint = (complaint) => {
-    setSelectedComplaint(complaint);
+  const handleSelectComplaint = async (complaint) => {
+    try {
+      const res = await complaintsAPI.getDetails(complaint.id);
+      console.log('CMP DETAILS RESPONSE:', res);
+
+      if (res.success && res.data?.complaint) {
+        setSelectedComplaint(res.data.complaint);
+      } else {
+        setSelectedComplaint(complaint);
+      }
+    } catch (err) {
+      console.error('Failed to load complaint details:', err);
+      setSelectedComplaint(complaint);
+    }
+
     setDrawerOpen(true);
   };
 

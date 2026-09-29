@@ -1,10 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { adminAPI } from '../../services/api';
-import {
-  INITIAL_STATS,
-  INITIAL_ACTIVITIES,
-} from '../../data/adminData';
+
 import AdminHeader from '../../components/admin/AdminHeader';
 import StatCard from '../../components/admin/StatCard';
 import TrendChart from '../../components/admin/TrendChart';
@@ -30,9 +27,24 @@ import {
 const AdminDashboard = () => {
   const { addToast } = useToast();
 
-  const [stats, setStats] = useState(INITIAL_STATS);
+  const [stats, setStats] = useState({
+    summary: {
+      total: 0,
+      pending: 0,
+      under_review: 0,
+      in_progress: 0,
+      resolved: 0,
+      reopened: 0,
+      confirmed: 0,
+      critical_or_high: 0,
+      total_users: 0,
+    },
+    statusDistribution: {},
+    trendData: [],
+    departmentWorkload: [],
+  });
   const [complaints, setComplaints] = useState([]);
-  const [activities, setActivities] = useState(INITIAL_ACTIVITIES);
+  const [activities, setActivities] = useState([]);
   const [selectedStatusFilter, setSelectedStatusFilter] = useState('ALL');
   const [selectedComplaint, setSelectedComplaint] = useState(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -80,6 +92,7 @@ const AdminDashboard = () => {
 
             trendData: statsRes.value.data.trend_data || [],
           }));
+          setActivities(statsRes.value.data.recent_activity || []);
         }
 
         if (

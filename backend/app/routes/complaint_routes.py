@@ -8,7 +8,10 @@ from app.models.complaint import Complaint, ComplaintStatus
 from app.models.complaint_update import ComplaintUpdate
 from app.models.user import UserRole
 from app.utils.decorators import get_current_user
-from app.utils.validators import validate_complaint_data
+from app.utils.validators import (
+    validate_complaint_data,
+    ALLOWED_DEPARTMENTS,
+)
 from app.utils.helpers import api_response
 from app.services.ai_service import ai_service
 from app.services.notification_service import notification_service
@@ -44,7 +47,16 @@ def create_complaint():
     # Initial classification: user can provide hints or defaults to AI recommendation
     initial_category = payload.get("category") or ai_result.get("category") or "Other"
     initial_priority = payload.get("priority") or ai_result.get("priority") or "MEDIUM"
-    initial_department = payload.get("department") or ai_result.get("department") or "Administration"
+
+    ai_department = ai_result.get("department")
+
+    if ai_department not in ALLOWED_DEPARTMENTS:
+        ai_department = "Administration"
+        
+    initial_department = (
+    payload.get("department")
+    or ai_department
+    )
 
     complaint = Complaint(
         organization_id=user.organization_id,  # Strictly derived from authenticated user
