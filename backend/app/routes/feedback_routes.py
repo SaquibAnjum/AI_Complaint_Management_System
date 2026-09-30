@@ -5,9 +5,10 @@ from flask_jwt_extended import jwt_required
 from app.extensions import db
 from app.models.complaint import Complaint, ComplaintStatus
 from app.models.feedback import Feedback
-from app.models.user import UserRole
+from app.models.user import User, UserRole
 from app.utils.decorators import get_current_user
 from app.utils.helpers import api_response
+from app.services.notification_service import notification_service
 
 feedback_bp = Blueprint("feedback", __name__, url_prefix="/api/complaints")
 
@@ -62,7 +63,29 @@ def submit_feedback(complaint_id):
         rating=rating,
         comment=comment,
     )
+
     db.session.add(fb)
+    db.session.flush()
+
+    # Notify all active administrators in the same organization.
+    admins = User.query.filter_by(
+        organization_id=user.organization_id,
+        role=UserRole.ADMIN,
+        is_active=True,
+    ).all()
+
+    for admin in admins:
+        notification_service.send(
+            organization_id=user.organization_id,
+            user_id=admin.id,
+            complaint_id=complaint.id,
+            message=(
+            f"New feedback received for CMP-{complaint.id}: "
+            f"{rating}/5 stars"
+            + (f" — {comment[:80]}" if comment else ".")
+        ),
+    )
+
     db.session.commit()
 
     return api_response(

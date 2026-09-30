@@ -14,7 +14,6 @@ import {
   XCircle,
   RotateCcw,
   Star,
-  User,
   ShieldCheck,
   AlertTriangle,
 } from 'lucide-react';
@@ -86,7 +85,7 @@ const ComplaintDetails = () => {
     try {
       const res = await complaintsAPI.rejectResolution(id, { reason: rejectionReason.trim() });
       if (res.success) {
-        toastSuccess('Resolution rejected. Complaint has been reopened for staff action.');
+        toastSuccess('Resolution rejected. Complaint has been reopened for further action.');
         setShowRejectModal(false);
         setRejectionReason('');
         fetchComplaint();
@@ -263,27 +262,7 @@ const ComplaintDetails = () => {
 
         </div>
 
-        {/* Active Staff Assignment if any */}
-        {complaint.active_assignment && (
-          <div style={{
-            background: 'var(--bg-subtle)',
-            borderRadius: 'var(--radius-sm)',
-            padding: '12px 16px',
-            marginTop: 16,
-            display: 'flex',
-            alignItems: 'center',
-            gap: 12,
-            border: '1px solid var(--border-light)',
-          }}>
-            <User size={18} style={{ color: 'var(--primary)' }} />
-            <div>
-              <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Assigned Technician:</span>
-              <div style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-main)' }}>
-                {complaint.active_assignment.staff_name} ({complaint.active_assignment.staff_email})
-              </div>
-            </div>
-          </div>
-        )}
+
       </div>
 
       {/* Resolution Feedback Card */}
@@ -320,7 +299,7 @@ const ComplaintDetails = () => {
           ) : (
             <form onSubmit={handleFeedbackSubmit}>
               <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: 14 }}>
-                Please rate the speed and quality of the resolution provided by staff:
+                Please rate the speed and quality of the resolution provided:
               </p>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
                 {[1, 2, 3, 4, 5].map((s) => (

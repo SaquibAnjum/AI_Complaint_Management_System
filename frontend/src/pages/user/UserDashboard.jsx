@@ -1,14 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import {
-  complaintsAPI,
-  feedbackAPI,
-  notificationsAPI,
-} from '../../services/api';
-import {
-  INITIAL_USER_PROFILE,
-} from '../../data/userData';
 import UserHeader from '../../components/user/UserHeader';
 import UserStatCard from '../../components/user/UserStatCard';
 import UserStatusOverview from '../../components/user/UserStatusOverview';
@@ -16,6 +8,11 @@ import UserRecentComplaints from '../../components/user/UserRecentComplaints';
 import UserLatestUpdates from '../../components/user/UserLatestUpdates';
 import UserComplaintDrawer from '../../components/user/UserComplaintDrawer';
 import { useToast } from '../../components/Toast';
+import {
+  complaintsAPI,
+  feedbackAPI,
+  notificationsAPI,
+} from '../../services/api';
 import {
   PlusCircle,
   Clock,
@@ -38,7 +35,7 @@ const UserDashboard = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [activeStatusFilter, setActiveStatusFilter] = useState('ALL');
 
-  const userName = user?.name || INITIAL_USER_PROFILE.name;
+  const userName = user?.name || 'User';
 
   // Load from API if backend server is responsive
   useEffect(() => {
@@ -140,84 +137,93 @@ const UserDashboard = () => {
 
   const handleConfirmResolution = async (complaint, feedback) => {
     try {
-      try {
-        await complaintsAPI.confirmResolution(complaint.id);
-        if (feedback?.rating) {
-          await feedbackAPI.submit(complaint.id, feedback);
-        }
-      } catch (err) {
-        console.warn('Backend confirmation skipped:', err);
+      const res = await complaintsAPI.confirmResolution(complaint.id);
+
+      if (!res?.success || !res.data?.complaint) {
+        throw new Error(res?.message || 'Failed to confirm resolution');
       }
 
-      const updated = {
-        ...complaint,
-        status: 'CONFIRMED',
-        rating: feedback?.rating,
-        user_feedback: feedback?.comment,
-        timeline: [
-          {
-            action: 'Resolution Confirmed by User',
-            by: userName,
-            time: 'Just now',
-            note: `Rating: ${feedback?.rating} / 5 Stars. "${feedback?.comment || 'Satisfied with work.'}"`,
-          },
-          ...(complaint.timeline || []),
-        ],
-      };
+      let updatedComplaint = res.data.complaint;
+
+      if (feedback?.rating) {
+        const feedbackRes = await feedbackAPI.submit(complaint.id, feedback);
+
+        if (!feedbackRes?.success) {
+          console.warn('Resolution confirmed, but feedback submission failed.');
+        }
+      }
 
       setComplaints((prev) =>
         prev.map((c) =>
-          c.id === complaint.id || c.ticket_id === complaint.ticket_id ? updated : c
+          c.id === complaint.id || c.ticket_id === complaint.ticket_id
+            ? updatedComplaint
+            : c
         )
       );
 
-      if (selectedComplaint && (selectedComplaint.id === complaint.id || selectedComplaint.ticket_id === complaint.ticket_id)) {
-        setSelectedComplaint(updated);
+      if (
+        selectedComplaint &&
+        (selectedComplaint.id === complaint.id ||
+          selectedComplaint.ticket_id === complaint.ticket_id)
+      ) {
+        setSelectedComplaint(updatedComplaint);
       }
 
-      addToast('Resolution confirmed! Thank you for your feedback.', 'success');
+      addToast(
+        'Resolution confirmed! Thank you for your feedback.',
+        'success'
+      );
+
       setDrawerOpen(false);
     } catch (err) {
-      addToast('Failed to confirm resolution', 'error');
+      console.error('Failed to confirm resolution:', err);
+
+      addToast(
+        err?.message || 'Failed to confirm resolution',
+        'error'
+      );
     }
   };
 
   const handleReopenComplaint = async (complaint, reason) => {
     try {
-      try {
-        await complaintsAPI.reopen(complaint.id, { reason });
-      } catch (err) {
-        console.warn('Backend reopen skipped:', err);
+      const res = await complaintsAPI.reopen(complaint.id, { reason });
+
+      if (!res?.success || !res.data?.complaint) {
+        throw new Error(res?.message || 'Failed to reopen complaint');
       }
 
-      const updated = {
-        ...complaint,
-        status: 'REOPENED',
-        timeline: [
-          {
-            action: 'Complaint Reopened by User',
-            by: userName,
-            time: 'Just now',
-            note: reason,
-          },
-          ...(complaint.timeline || []),
-        ],
-      };
+      const updatedComplaint = res.data.complaint;
 
       setComplaints((prev) =>
         prev.map((c) =>
-          c.id === complaint.id || c.ticket_id === complaint.ticket_id ? updated : c
+          c.id === complaint.id || c.ticket_id === complaint.ticket_id
+            ? updatedComplaint
+            : c
         )
       );
 
-      if (selectedComplaint && (selectedComplaint.id === complaint.id || selectedComplaint.ticket_id === complaint.ticket_id)) {
-        setSelectedComplaint(updated);
+      if (
+        selectedComplaint &&
+        (selectedComplaint.id === complaint.id ||
+          selectedComplaint.ticket_id === complaint.ticket_id)
+      ) {
+        setSelectedComplaint(updatedComplaint);
       }
 
-      addToast('Complaint reopened. Department staff notified.', 'info');
+      addToast(
+        'Complaint reopened successfully.',
+        'info'
+      );
+
       setDrawerOpen(false);
     } catch (err) {
-      addToast('Failed to reopen complaint', 'error');
+      console.error('Failed to reopen complaint:', err);
+
+      addToast(
+        err?.message || 'Failed to reopen complaint',
+        'error'
+      );
     }
   };
 

@@ -170,8 +170,20 @@ const MyComplaints = () => {
   const countResolved = complaints.filter((c) => c.status === 'RESOLVED' || c.status === 'CONFIRMED').length;
   const countReopened = complaints.filter((c) => c.status === 'REOPENED').length;
 
-  const handleSelectComplaint = (complaint) => {
-    setSelectedComplaint(complaint);
+  const handleSelectComplaint = async (complaint) => {
+    try {
+      const res = await complaintsAPI.getDetails(complaint.id);
+
+      if (res.success && res.data?.complaint) {
+        setSelectedComplaint(res.data.complaint);
+      } else {
+        setSelectedComplaint(complaint);
+      }
+    } catch (err) {
+      console.error('Failed to load complaint details:', err);
+      setSelectedComplaint(complaint);
+    }
+
     setDrawerOpen(true);
   };
 

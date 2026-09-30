@@ -35,13 +35,30 @@ class NotificationService:
 
     @staticmethod
     def notify_complaint_submitted(complaint):
-        """Send notification when a user files a new complaint."""
-        return NotificationService.send(
+        """Notify the complainant and organization administrators when a new complaint is filed."""
+
+        # Notify the user who submitted the complaint.
+        NotificationService.send(
             user_id=complaint.user_id,
             complaint_id=complaint.id,
             organization_id=complaint.organization_id,
             message=f"Your complaint #{complaint.id} ('{complaint.title[:30]}') has been submitted successfully.",
         )
+
+        # Notify all administrators in the same organization.
+        admins = User.query.filter_by(
+            organization_id=complaint.organization_id,
+            role="ADMIN",
+            is_active=True,
+        ).all()
+
+        for admin in admins:
+            NotificationService.send(
+                user_id=admin.id,
+                complaint_id=complaint.id,
+                organization_id=complaint.organization_id,
+                message=f"New complaint submitted: {complaint.title[:50]} (CMP-{complaint.id}).",
+            )
 
     @staticmethod
     def notify_status_updated(complaint, status_to):

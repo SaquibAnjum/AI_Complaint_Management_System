@@ -9,16 +9,15 @@ import {
   LogOut,
   CheckCheck,
   Shield,
-  Wrench,
   GraduationCap,
   ChevronDown,
   Settings,
-  UserCheck,
   CheckCircle2,
   Clock,
   Sparkles,
   ExternalLink,
   X,
+  MessageSquare,
   Mail,
   Calendar,
   KeyRound,
@@ -121,8 +120,6 @@ const Navbar = () => {
         setShowNotifs(false);
         if (user?.role === 'ADMIN') {
           navigate(`/admin/complaints/${complaintId}`);
-        } else if (user?.role === 'STAFF') {
-          navigate(`/staff/complaints/${complaintId}`);
         } else {
           navigate(`/user/complaints/${complaintId}`);
         }
@@ -134,7 +131,6 @@ const Navbar = () => {
 
   const getHomeLink = () => {
     if (user?.role === 'ADMIN') return '/admin/dashboard';
-    if (user?.role === 'STAFF') return '/staff/dashboard';
     return '/user/dashboard';
   };
 
@@ -153,18 +149,7 @@ const Navbar = () => {
           description: 'Full System Authority & Escalations',
           tabLabel: 'Admin Alerts',
         };
-      case 'STAFF':
-        return {
-          label: 'Staff Technician',
-          badgeText: 'STAFF',
-          badgeColor: '#0284c7',
-          badgeBg: '#f0f9ff',
-          badgeBorder: '#bae6fd',
-          gradientAvatar: 'linear-gradient(135deg, #0284c7, #4f46e5)',
-          icon: <Wrench size={14} color="#0284c7" />,
-          description: 'Field Inspection & Grievance Resolution',
-          tabLabel: 'Work Queue',
-        };
+
       default:
         return {
           label: 'Citizen / User',
@@ -196,6 +181,15 @@ const Navbar = () => {
     const role = user?.role;
 
     if (role === 'ADMIN') {
+      if (text.includes('feedback') || text.includes('rating')) {
+        return {
+          category: 'User Feedback',
+          badgeBg: '#dcfce7',
+          badgeColor: '#166534',
+          badgeBorder: '#bbf7d0',
+          icon: <MessageSquare size={15} color="#16a34a" />,
+        };
+      }
       if (text.includes('unassigned') || text.includes('escalat') || text.includes('critical') || text.includes('sla')) {
         return {
           category: 'SLA Escalation',
@@ -214,24 +208,7 @@ const Navbar = () => {
       };
     }
 
-    if (role === 'STAFF') {
-      if (text.includes('assigned') || text.includes('reopened')) {
-        return {
-          category: 'Assignment',
-          badgeBg: '#e0f2fe',
-          badgeColor: '#075985',
-          badgeBorder: '#bae6fd',
-          icon: <UserCheck size={15} color="#0284c7" />,
-        };
-      }
-      return {
-        category: 'Work Update',
-        badgeBg: '#e0e7ff',
-        badgeColor: '#3730a3',
-        badgeBorder: '#c7d2fe',
-        icon: <Clock size={15} color="#4f46e5" />,
-      };
-    }
+
 
     // USER
     if (text.includes('resolved') || text.includes('confirmed')) {
@@ -266,11 +243,9 @@ const Navbar = () => {
     if (notifFilter === 'role') {
       const text = (n.message || '').toLowerCase();
       if (user?.role === 'ADMIN') {
-        return text.includes('admin') || text.includes('alert') || text.includes('escalat') || text.includes('status') || text.includes('complaint');
+        return text.includes('admin') || text.includes('alert') || text.includes('escalat') || text.includes('status') || text.includes('complaint') || text.includes('feedback');
       }
-      if (user?.role === 'STAFF') {
-        return text.includes('assigned') || text.includes('reopened') || text.includes('work') || text.includes('update');
-      }
+
       return text.includes('submitted') || text.includes('status') || text.includes('resolved') || text.includes('assigned');
     }
     return true;
@@ -292,7 +267,7 @@ const Navbar = () => {
   return (
     <>
       <header className="navbar" style={{ height: 64, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 24px', background: 'rgba(255, 255, 255, 0.92)', backdropFilter: 'blur(12px)', borderBottom: '1px solid #e2e8f0', position: 'sticky', top: 0, zIndex: 40 }}>
-        
+
         {/* =========================================================
             1. BRANDING & LOGO
            ========================================================= */}
@@ -468,11 +443,11 @@ const Navbar = () => {
                       <span style={{ fontSize: '0.72rem' }}>You're all caught up in your {roleConfig.label} queue</span>
                     </div>
                   ) : (
-                    filteredNotifications.map((n) => {
+                    filteredNotifications.map((n, index) => {
                       const meta = classifyNotification(n);
                       return (
                         <div
-                          key={n.id}
+                          key={`${n.id}-${n.created_at}-${index}`}
                           onClick={() => handleMarkOneRead(n.id, n.complaint_id)}
                           style={{
                             padding: '12px 16px',
@@ -627,7 +602,7 @@ const Navbar = () => {
 
                 {/* Menu Action Items */}
                 <div style={{ padding: 8, display: 'flex', flexDirection: 'column', gap: 2 }}>
-                  
+
                   {/* View Profile */}
                   <button
                     type="button"
@@ -700,7 +675,7 @@ const Navbar = () => {
       {showProfileModal && (
         <div className="navbar-modal-overlay" style={{ position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.45)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, zIndex: 100 }}>
           <div className="navbar-modal-card" style={{ background: '#ffffff', borderRadius: 18, boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', border: '1px solid #e2e8f0', width: '100%', maxWidth: 440, overflow: 'hidden' }}>
-            
+
             {/* Modal Header */}
             <div style={{ padding: '18px 20px', background: 'linear-gradient(135deg, #4f46e5, #7c3aed)', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -782,7 +757,7 @@ const Navbar = () => {
       {showSettingsModal && (
         <div className="navbar-modal-overlay" style={{ position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.45)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, zIndex: 100 }}>
           <div className="navbar-modal-card" style={{ background: '#ffffff', borderRadius: 18, boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', border: '1px solid #e2e8f0', width: '100%', maxWidth: 440, overflow: 'hidden' }}>
-            
+
             {/* Modal Header */}
             <div style={{ padding: '18px 20px', background: 'linear-gradient(135deg, #1e293b, #334155)', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>

@@ -8,7 +8,6 @@ const Unauthorized = () => {
 
   const getHomeRoute = () => {
     if (user?.role === 'ADMIN') return '/admin/dashboard';
-    if (user?.role === 'STAFF') return '/staff/dashboard';
     return '/user/dashboard';
   };
 

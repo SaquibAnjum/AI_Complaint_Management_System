@@ -5,7 +5,6 @@
 export const USER_ROLES = {
   USER: 'USER',
   ADMIN: 'ADMIN',
-  STAFF: 'STAFF',
 };
 
 export const COMPLAINT_STATUS = {

@@ -21,14 +21,56 @@ import {
 } from 'lucide-react';
 
 const CATEGORIES = [
-  { id: 'Technical Issue', label: 'Technical Issue', desc: 'Software, Wi-Fi, lab equipment, or portal errors' },
-  { id: 'Infrastructure', label: 'Infrastructure', desc: 'Electricity, water supply, AC, furniture, or fixtures' },
-  { id: 'Academic', label: 'Academic', desc: 'Course schedules, grading queries, or faculty coordination' },
-  { id: 'Hostel', label: 'Hostel', desc: 'Room maintenance, mess food, laundry, or sanitation' },
-  { id: 'Transport', label: 'Transport', desc: 'Campus shuttle, parking, or vehicle access' },
-  { id: 'Security', label: 'Security', desc: 'Lost property, access badges, or campus safety concerns' },
-  { id: 'Administration', label: 'Administration', desc: 'Fees, certificates, documents, or student affairs' },
-  { id: 'Other', label: 'Other', desc: 'Any general concern not covered above' },
+  {
+    id: 'Academic',
+    label: 'Academic',
+    desc: 'Course schedules, grading queries, or faculty coordination',
+  },
+  {
+    id: 'Fees',
+    label: 'Fees',
+    desc: 'Fee payments, refunds, or billing-related concerns',
+  },
+  {
+    id: 'Hostel',
+    label: 'Hostel',
+    desc: 'Room maintenance, mess food, laundry, or sanitation',
+  },
+  {
+    id: 'Library',
+    label: 'Library',
+    desc: 'Library access, books, study areas, or library facilities',
+  },
+  {
+    id: 'Transport',
+    label: 'Transport',
+    desc: 'Campus shuttle, parking, or vehicle access',
+  },
+  {
+    id: 'Infrastructure',
+    label: 'Infrastructure',
+    desc: 'Electricity, water supply, AC, furniture, or fixtures',
+  },
+  {
+    id: 'IT Support',
+    label: 'IT Support',
+    desc: 'Software, Wi-Fi, lab equipment, or portal errors',
+  },
+  {
+    id: 'Security',
+    label: 'Security',
+    desc: 'Lost property, access badges, or campus safety concerns',
+  },
+  {
+    id: 'Cleanliness',
+    label: 'Cleanliness',
+    desc: 'Waste management, sanitation, or cleanliness concerns',
+  },
+  {
+    id: 'Other',
+    label: 'Other',
+    desc: 'Any general concern not covered above',
+  },
 ];
 
 const PRIORITIES = [
