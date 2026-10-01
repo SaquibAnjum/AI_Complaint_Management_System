@@ -189,43 +189,65 @@ const MyComplaints = () => {
 
   const handleConfirmResolution = async (complaint, feedback) => {
     try {
-      try {
-        await complaintsAPI.confirmResolution(complaint.id);
-        if (feedback?.rating) {
-          await feedbackAPI.submit(complaint.id, feedback);
-        }
-      } catch (err) {
-        console.warn('Backend confirmation skipped:', err);
+      const res = await complaintsAPI.confirmResolution(complaint.id);
+
+      if (!res?.success || !res.data?.complaint) {
+        throw new Error(res?.message || 'Failed to confirm resolution');
       }
 
-      const updated = {
-        ...complaint,
-        status: 'CONFIRMED',
-        rating: feedback?.rating,
-        user_feedback: feedback?.comment,
-        timeline: [
-          {
-            action: 'Resolution Confirmed by User',
-            by: user?.name || 'Saquib (User)',
-            time: 'Just now',
-            note: `Rating: ${feedback?.rating} / 5 Stars. "${feedback?.comment || 'Satisfied with resolution.'}"`,
-          },
-          ...(complaint.timeline || []),
-        ],
-      };
+      const updatedComplaint = res.data.complaint;
+
+      // Submit feedback only after the backend successfully confirms resolution.
+      if (feedback?.rating) {
+        try {
+          const feedbackRes = await feedbackAPI.submit(
+            complaint.id,
+            feedback
+          );
+
+          if (!feedbackRes?.success) {
+            console.warn(
+              'Resolution confirmed, but feedback submission failed.'
+            );
+          }
+        } catch (feedbackError) {
+          console.warn(
+            'Resolution confirmed, but feedback submission failed:',
+            feedbackError
+          );
+        }
+      }
 
       setComplaints((prev) =>
-        prev.map((c) => (c.id === complaint.id || c.ticket_id === complaint.ticket_id ? updated : c))
+        prev.map((c) =>
+          c.id === complaint.id ||
+            c.ticket_id === complaint.ticket_id
+            ? updatedComplaint
+            : c
+        )
       );
 
-      if (selectedComplaint && (selectedComplaint.id === complaint.id || selectedComplaint.ticket_id === complaint.ticket_id)) {
-        setSelectedComplaint(updated);
+      if (
+        selectedComplaint &&
+        (selectedComplaint.id === complaint.id ||
+          selectedComplaint.ticket_id === complaint.ticket_id)
+      ) {
+        setSelectedComplaint(updatedComplaint);
       }
 
-      addToast('Resolution confirmed! Thank you for rating the work.', 'success');
+      addToast(
+        'Resolution confirmed! Thank you for your feedback.',
+        'success'
+      );
+
       setDrawerOpen(false);
     } catch (err) {
-      addToast('Failed to confirm resolution', 'error');
+      console.error('Failed to confirm resolution:', err);
+
+      addToast(
+        err?.message || 'Failed to confirm resolution',
+        'error'
+      );
     }
   };
 

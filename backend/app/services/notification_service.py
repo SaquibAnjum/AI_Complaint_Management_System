@@ -73,13 +73,36 @@ class NotificationService:
 
     @staticmethod
     def notify_reopened(complaint):
-        """Notify user when complaint is reopened."""
+        """Notify the complainant and organization administrators when a complaint is reopened."""
+
+        # Notify the user who reopened the complaint.
         NotificationService.send(
             user_id=complaint.user_id,
             complaint_id=complaint.id,
             organization_id=complaint.organization_id,
             message=f"Your complaint #{complaint.id} has been reopened for further investigation.",
         )
+
+        # Notify all active administrators in the same organization.
+        admins = User.query.filter_by(
+            organization_id=complaint.organization_id,
+            role="ADMIN",
+            is_active=True,
+        ).all()
+
+        complainant = User.query.get(complaint.user_id)
+        complainant_name = complainant.name if complainant else "A user"
+
+        for admin in admins:
+            NotificationService.send(
+                user_id=admin.id,
+                complaint_id=complaint.id,
+                organization_id=complaint.organization_id,
+                message=(
+                    f"Complaint reopened by {complainant_name} "
+                    f"(CMP-{complaint.id})."
+                ),
+            )
 
 
 notification_service = NotificationService()
