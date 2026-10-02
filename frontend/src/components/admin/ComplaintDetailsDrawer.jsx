@@ -128,21 +128,19 @@ const ComplaintDetailsDrawer = ({
           <div className="flex border-b border-slate-200 px-5 bg-white text-xs font-medium text-slate-600 gap-6">
             <button
               onClick={() => setActiveTab('details')}
-              className={`py-3 border-b-2 transition-colors ${
-                activeTab === 'details'
+              className={`py-3 border-b-2 transition-colors ${activeTab === 'details'
                   ? 'border-indigo-600 text-indigo-600 font-semibold'
                   : 'border-transparent hover:text-slate-900'
-              }`}
+                }`}
             >
               Overview & Manage
             </button>
             <button
               onClick={() => setActiveTab('timeline')}
-              className={`py-3 border-b-2 transition-colors flex items-center gap-1.5 ${
-                activeTab === 'timeline'
+              className={`py-3 border-b-2 transition-colors flex items-center gap-1.5 ${activeTab === 'timeline'
                   ? 'border-indigo-600 text-indigo-600 font-semibold'
                   : 'border-transparent hover:text-slate-900'
-              }`}
+                }`}
             >
               <History className="w-3.5 h-3.5" />
               Activity Audit ({complaint.timeline?.length || 3})
@@ -150,11 +148,10 @@ const ComplaintDetailsDrawer = ({
             {complaint.ai_sentiment && (
               <button
                 onClick={() => setActiveTab('ai')}
-                className={`py-3 border-b-2 transition-colors flex items-center gap-1.5 ${
-                  activeTab === 'ai'
+                className={`py-3 border-b-2 transition-colors flex items-center gap-1.5 ${activeTab === 'ai'
                     ? 'border-indigo-600 text-indigo-600 font-semibold'
                     : 'border-transparent hover:text-slate-900'
-                }`}
+                  }`}
               >
                 <Sparkles className="w-3.5 h-3.5 text-indigo-500" />
                 AI Triage Advisory
@@ -249,7 +246,6 @@ const ComplaintDetailsDrawer = ({
                         <option value="IN_PROGRESS">In Progress</option>
                         <option value="RESOLVED">Resolved</option>
                         <option value="CONFIRMED">Confirmed</option>
-                        <option value="REOPENED">Reopened</option>
                       </select>
                     </div>
 

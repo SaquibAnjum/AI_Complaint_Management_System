@@ -311,7 +311,6 @@ const ComplaintReview = () => {
                 <option value="IN_PROGRESS">In Progress</option>
                 <option value="RESOLVED">Resolved</option>
                 <option value="CONFIRMED">Confirmed / Closed</option>
-                <option value="REOPENED">Reopened</option>
               </select>
             </div>
 

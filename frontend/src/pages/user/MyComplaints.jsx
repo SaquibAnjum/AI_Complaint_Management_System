@@ -253,38 +253,48 @@ const MyComplaints = () => {
 
   const handleReopenComplaint = async (complaint, reason) => {
     try {
-      try {
-        await complaintsAPI.reopen(complaint.id, { reason });
-      } catch (err) {
-        console.warn('Backend reopen skipped:', err);
+      const res = await complaintsAPI.reopen(complaint.id, { reason });
+
+      if (!res?.success || !res.data?.complaint) {
+        throw new Error(res?.message || 'Failed to reopen complaint');
       }
 
-      const updated = {
-        ...complaint,
-        status: 'REOPENED',
-        timeline: [
-          {
-            action: 'Complaint Reopened by User',
-            by: user?.name || 'Saquib (User)',
-            time: 'Just now',
-            note: reason,
-          },
-          ...(complaint.timeline || []),
-        ],
-      };
+      // Backend is the source of truth.
+      // Reopened complaint is reset to PENDING.
+      const updatedComplaint = res.data.complaint;
 
       setComplaints((prev) =>
-        prev.map((c) => (c.id === complaint.id || c.ticket_id === complaint.ticket_id ? updated : c))
+        prev.map((c) =>
+          c.id === complaint.id ||
+            c.ticket_id === complaint.ticket_id
+            ? updatedComplaint
+            : c
+        )
       );
 
-      if (selectedComplaint && (selectedComplaint.id === complaint.id || selectedComplaint.ticket_id === complaint.ticket_id)) {
-        setSelectedComplaint(updated);
+      if (
+        selectedComplaint &&
+        (
+          selectedComplaint.id === complaint.id ||
+          selectedComplaint.ticket_id === complaint.ticket_id
+        )
+      ) {
+        setSelectedComplaint(updatedComplaint);
       }
 
-      addToast('Complaint reopened. Assigned staff notified.', 'info');
+      addToast(
+        'Complaint reopened and moved back to Pending.',
+        'info'
+      );
+
       setDrawerOpen(false);
     } catch (err) {
-      addToast('Failed to reopen complaint', 'error');
+      console.error('Failed to reopen complaint:', err);
+
+      addToast(
+        err?.message || 'Failed to reopen complaint',
+        'error'
+      );
     }
   };
 

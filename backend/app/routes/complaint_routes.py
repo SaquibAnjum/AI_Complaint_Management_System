@@ -367,46 +367,79 @@ def reject_resolution(complaint_id):
 @complaint_bp.route("/<int:complaint_id>/reopen", methods=["POST"])
 @jwt_required()
 def reopen_complaint(complaint_id):
-    """Reopen a resolved or confirmed complaint."""
+    """Allow the complainant to reopen a resolved or confirmed complaint."""
+
     user = get_current_user()
-    complaint = Complaint.query.filter_by(id=complaint_id, organization_id=user.organization_id).first()
+
+    complaint = Complaint.query.filter_by(
+        id=complaint_id,
+        organization_id=user.organization_id
+    ).first()
 
     if not complaint:
-        return api_response(success=False, message="Complaint not found", error="COMPLAINT_NOT_FOUND", status_code=404)
+        return api_response(
+            success=False,
+            message="Complaint not found",
+            error="COMPLAINT_NOT_FOUND",
+            status_code=404
+        )
 
-    if complaint.user_id != user.id and user.role != UserRole.ADMIN:
-        return api_response(success=False, message="Unauthorized to reopen this complaint", error="FORBIDDEN", status_code=403)
+    # Only the complaint owner can reopen it.
+    if complaint.user_id != user.id:
+        return api_response(
+            success=False,
+            message="Only the complainant can reopen this complaint",
+            error="FORBIDDEN",
+            status_code=403
+        )
 
-    if complaint.status not in [ComplaintStatus.RESOLVED, ComplaintStatus.CONFIRMED]:
+    # Reopen is allowed only after resolution/confirmation.
+    if complaint.status not in [
+        ComplaintStatus.RESOLVED,
+        ComplaintStatus.CONFIRMED
+    ]:
         return api_response(
             success=False,
             message=f"Cannot reopen a complaint that is currently '{complaint.status}'",
             error="INVALID_STATUS_TRANSITION",
-            status_code=400,
+            status_code=400
         )
 
     payload = request.get_json(silent=True) or {}
-    reason = payload.get("reason", "Reopened by user").strip()
+    reason = payload.get("reason", "").strip()
+
+    if not reason:
+        return api_response(
+            success=False,
+            message="Please provide a reason for reopening the complaint",
+            error="REOPEN_REASON_REQUIRED",
+            status_code=422
+        )
 
     previous_status = complaint.status
-    complaint.status = ComplaintStatus.REOPENED
+
+    # Restart the complaint workflow from PENDING.
+    complaint.status = ComplaintStatus.PENDING
+
     update_log = ComplaintUpdate(
         organization_id=user.organization_id,
         complaint_id=complaint.id,
         user_id=user.id,
         status_from=previous_status,
-        status_to=ComplaintStatus.REOPENED,
+        status_to=ComplaintStatus.PENDING,
         remark=f"Complaint reopened by {user.name}. Reason: {reason}",
     )
+
     db.session.add(update_log)
 
+    # Notify the user and organization admins.
     notification_service.notify_reopened(complaint)
 
     db.session.commit()
 
     return api_response(
         success=True,
-        message="Complaint reopened successfully",
+        message="Complaint reopened successfully and moved to PENDING",
         data={"complaint": complaint.to_dict(include_details=True)},
         status_code=200,
     )
