@@ -25,7 +25,6 @@ const STATUS_OPTIONS = [
   { value: 'IN_PROGRESS', label: 'In Progress' },
   { value: 'RESOLVED', label: 'Resolved' },
   { value: 'CONFIRMED', label: 'Confirmed' },
-  { value: 'REOPENED', label: 'Reopened' },
 ];
 
 const ManageComplaints = () => {
@@ -202,8 +201,8 @@ const ManageComplaints = () => {
               key={q.status}
               onClick={() => setStatusFilter(q.status)}
               className={`px-3 py-1.5 text-xs font-medium rounded-full border transition-all whitespace-nowrap ${isActive
-                  ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm'
-                  : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+                ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm'
+                : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300 hover:bg-slate-50'
                 }`}
             >
               {q.label}

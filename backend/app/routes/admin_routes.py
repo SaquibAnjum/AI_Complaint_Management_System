@@ -364,7 +364,7 @@ def override_classification(complaint_id):
 
     prev_status = complaint.status
     new_status = payload.get("status")
-    if new_status and new_status in ComplaintStatus.ALL_STATUSES and new_status != prev_status:
+    if new_status and new_status in ComplaintStatus.ALL_STATUSES and new_status != ComplaintStatus.REOPENED and new_status != prev_status:
         complaint.status = new_status
         changes.append(f"Status: {prev_status} -> {new_status}")
 
@@ -405,7 +405,7 @@ def update_complaint_status_admin(complaint_id):
     new_status = payload.get("status")
     remark = payload.get("remark", "").strip()
 
-    if not new_status or new_status not in ComplaintStatus.ALL_STATUSES:
+    if not new_status or new_status not in ComplaintStatus.ALL_STATUSES or new_status == ComplaintStatus.REOPENED:
         return api_response(
             success=False,
             message=f"Invalid status. Must be one of: {', '.join(ComplaintStatus.ALL_STATUSES)}",
