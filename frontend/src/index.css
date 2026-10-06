@@ -8,13 +8,13 @@
 
 :root {
   --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  
+
   /* Color Palette */
   --bg-main: #f8fafc;
   --bg-surface: #ffffff;
   --bg-subtle: #f1f5f9;
   --bg-hover: #e2e8f0;
-  
+
   --border-light: #e2e8f0;
   --border-medium: #cbd5e1;
   --border-focus: #6366f1;
@@ -365,6 +365,7 @@ a:hover {
     opacity: 0;
     transform: translateY(-4px) scale(0.98);
   }
+
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
@@ -498,6 +499,7 @@ a:hover {
     opacity: 0;
     transform: scale(0.95);
   }
+
   to {
     opacity: 1;
     transform: scale(1);
@@ -571,6 +573,7 @@ a:hover {
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
+
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
@@ -740,18 +743,68 @@ a:hover {
   text-transform: capitalize;
 }
 
-.badge-pending { background: #fef3c7; color: #b45309; border: 1px solid #fde68a; }
-.badge-review { background: #ede9fe; color: #6d28d9; border: 1px solid #ddd6fe; }
-.badge-assigned { background: #dbeafe; color: #1d4ed8; border: 1px solid #bfdbfe; }
-.badge-progress { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
-.badge-resolved { background: #d1fae5; color: #047857; border: 1px solid #a7f3d0; }
-.badge-confirmed { background: #ecfdf5; color: #065f46; border: 1px solid #6ee7b7; }
-.badge-reopened { background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; }
+.badge-pending {
+  background: #fef3c7;
+  color: #b45309;
+  border: 1px solid #fde68a;
+}
 
-.badge-priority-low { background: #f1f5f9; color: #475569; }
-.badge-priority-medium { background: #eff6ff; color: #1d4ed8; }
-.badge-priority-high { background: #fff7ed; color: #c2410c; }
-.badge-priority-critical { background: #fef2f2; color: #b91c1c; font-weight: 700; }
+.badge-review {
+  background: #ede9fe;
+  color: #6d28d9;
+  border: 1px solid #ddd6fe;
+}
+
+.badge-assigned {
+  background: #dbeafe;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+}
+
+.badge-progress {
+  background: #e0f2fe;
+  color: #0369a1;
+  border: 1px solid #bae6fd;
+}
+
+.badge-resolved {
+  background: #d1fae5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+}
+
+.badge-confirmed {
+  background: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #6ee7b7;
+}
+
+.badge-reopened {
+  background: #fee2e2;
+  color: #b91c1c;
+  border: 1px solid #fca5a5;
+}
+
+.badge-priority-low {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.badge-priority-medium {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.badge-priority-high {
+  background: #fff7ed;
+  color: #c2410c;
+}
+
+.badge-priority-critical {
+  background: #fef2f2;
+  color: #b91c1c;
+  font-weight: 700;
+}
 
 /* AI Suggestion Box */
 .ai-suggestion-box {
@@ -942,8 +995,15 @@ a:hover {
 }
 
 @keyframes modalFadeIn {
-  from { opacity: 0; transform: scale(0.96); }
-  to { opacity: 1; transform: scale(1); }
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 .modal-header {
@@ -993,13 +1053,31 @@ a:hover {
 }
 
 @keyframes toastSlide {
-  from { transform: translateY(20px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
-.toast-success { background: #065f46; border-left: 4px solid #10b981; }
-.toast-error { background: #991b1b; border-left: 4px solid #ef4444; }
-.toast-info { background: #1e293b; border-left: 4px solid #6366f1; }
+.toast-success {
+  background: #065f46;
+  border-left: 4px solid #10b981;
+}
+
+.toast-error {
+  background: #991b1b;
+  border-left: 4px solid #ef4444;
+}
+
+.toast-info {
+  background: #1e293b;
+  border-left: 4px solid #6366f1;
+}
 
 /* Filter & Action Toolbar */
 .toolbar {
@@ -1023,12 +1101,465 @@ a:hover {
   .app-layout {
     flex-direction: column;
   }
+
   .sidebar {
     width: 100%;
     height: auto;
     position: relative;
   }
+
   .page-container {
     padding: 16px;
   }
+}
+
+
+
+/* ==========================================================================
+   LIGHT / DARK MODE
+   ========================================================================== */
+
+body {
+  transition:
+    background-color 0.25s ease,
+    color 0.25s ease;
+}
+
+/* Main application surfaces */
+body.dark-mode {
+  --bg-main: #0f172a;
+  --bg-surface: #111827;
+  --bg-subtle: #1e293b;
+  --bg-hover: #334155;
+
+  --border-light: #334155;
+  --border-medium: #475569;
+  --border-focus: #818cf8;
+
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --text-secondary: #cbd5e1;
+  --text-inverse: #0f172a;
+
+  --primary: #818cf8;
+  --primary-hover: #6366f1;
+  --primary-light: #312e81;
+  --primary-subtle: #1e1b4b;
+
+  --ai-purple-light: #2e1065;
+  --ai-purple-border: #6d28d9;
+
+  background-color: var(--bg-main);
+  color: var(--text-main);
+}
+
+/* Common Tailwind neutral backgrounds */
+body.dark-mode .bg-white {
+  background-color: #111827 !important;
+}
+
+body.dark-mode .bg-slate-50 {
+  background-color: #0f172a !important;
+}
+
+body.dark-mode .bg-slate-100 {
+  background-color: #1e293b !important;
+}
+
+body.dark-mode .bg-slate-200 {
+  background-color: #334155 !important;
+}
+
+/* Common text colors */
+body.dark-mode .text-slate-900 {
+  color: #f8fafc !important;
+}
+
+body.dark-mode .text-slate-800 {
+  color: #f1f5f9 !important;
+}
+
+body.dark-mode .text-slate-700 {
+  color: #e2e8f0 !important;
+}
+
+body.dark-mode .text-slate-600 {
+  color: #cbd5e1 !important;
+}
+
+body.dark-mode .text-slate-500 {
+  color: #94a3b8 !important;
+}
+
+body.dark-mode .text-slate-400 {
+  color: #94a3b8 !important;
+}
+
+/* Borders */
+body.dark-mode .border-slate-100 {
+  border-color: #1e293b !important;
+}
+
+body.dark-mode .border-slate-200 {
+  border-color: #334155 !important;
+}
+
+body.dark-mode .border-slate-300 {
+  border-color: #475569 !important;
+}
+
+/* Inputs / selects / textareas */
+body.dark-mode input,
+body.dark-mode textarea,
+body.dark-mode select {
+  background-color: #111827;
+  color: #f8fafc;
+  border-color: #334155;
+}
+
+body.dark-mode input::placeholder,
+body.dark-mode textarea::placeholder {
+  color: #64748b;
+}
+
+body.dark-mode input:focus,
+body.dark-mode textarea:focus,
+body.dark-mode select:focus {
+  border-color: #818cf8;
+}
+
+/* Main app shell */
+body.dark-mode .main-content-wrapper {
+  background-color: #0f172a;
+}
+
+body.dark-mode .page-container {
+  color: #f8fafc;
+}
+
+/* Navbar */
+body.dark-mode .navbar {
+  background: rgba(15, 23, 42, 0.94) !important;
+  border-bottom-color: #334155 !important;
+}
+
+body.dark-mode .navbar-brand-title {
+  color: #f8fafc !important;
+}
+
+body.dark-mode .navbar-brand-subtitle {
+  color: #94a3b8 !important;
+}
+
+body.dark-mode .navbar-icon-btn {
+  background: #111827 !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+
+body.dark-mode .navbar-profile-btn {
+  background: #111827 !important;
+  border-color: #334155 !important;
+}
+
+body.dark-mode .navbar-dropdown-panel {
+  background: #111827 !important;
+  border-color: #334155 !important;
+}
+
+/* Sidebar */
+body.dark-mode .sidebar {
+  background: #111827 !important;
+  border-right-color: #334155 !important;
+}
+
+body.dark-mode .sidebar-brand,
+body.dark-mode .sidebar-section-title {
+  color: #f8fafc !important;
+}
+
+/* Cards and common surfaces */
+body.dark-mode .card,
+body.dark-mode .surface,
+body.dark-mode .panel {
+  background-color: #111827;
+  border-color: #334155;
+}
+
+/* Tables */
+body.dark-mode table {
+  color: #e2e8f0;
+}
+
+body.dark-mode th {
+  background-color: #1e293b !important;
+  color: #cbd5e1 !important;
+}
+
+body.dark-mode td {
+  border-color: #334155 !important;
+}
+
+/* Links */
+body.dark-mode a {
+  color: #a5b4fc;
+}
+
+/* Smooth theme transition */
+body.dark-mode,
+body.dark-mode .navbar,
+body.dark-mode .sidebar,
+body.dark-mode .card,
+body.dark-mode .surface,
+body.dark-mode input,
+body.dark-mode textarea,
+body.dark-mode select {
+  transition:
+    background-color 0.25s ease,
+    color 0.25s ease,
+    border-color 0.25s ease;
+}
+
+
+/* ==========================================================================
+   DARK MODE - LIGHT SURFACE FIXES
+   ========================================================================== */
+
+/* Admin organization banner */
+body.dark-mode .theme-org-banner {
+  background-image: none !important;
+  background-color: #111827 !important;
+  border-color: #334155 !important;
+}
+
+/* Sidebar community poster */
+body.dark-mode .theme-poster {
+  background-image: none !important;
+  background-color: #111827 !important;
+  border-color: #334155 !important;
+}
+
+/* Keep poster text readable on dark surface */
+body.dark-mode .theme-poster .text-slate-900 {
+  color: #f8fafc !important;
+}
+
+body.dark-mode .theme-poster .text-slate-500 {
+  color: #94a3b8 !important;
+}
+
+/* Purple accent remains visible */
+body.dark-mode .theme-poster span {
+  color: #a5b4fc !important;
+}
+
+body.dark-mode .theme-poster span span {
+  background-color: #818cf8 !important;
+}
+
+
+
+/* ==========================================================================
+   DARK MODE - NAVBAR / NOTIFICATION / PROFILE FIX
+   ========================================================================== */
+
+/* -----------------------------
+   Notification dropdown
+   ----------------------------- */
+
+body.dark-mode .notif-dropdown-card {
+  background: #111827 !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+
+body.dark-mode .notif-dropdown-card>div:first-child {
+  background: #111827 !important;
+  border-bottom-color: #334155 !important;
+}
+
+body.dark-mode .notif-dropdown-card>div:nth-child(2) {
+  background: #0f172a !important;
+  border-bottom-color: #334155 !important;
+}
+
+body.dark-mode .notif-dropdown-card button {
+  color: #cbd5e1;
+}
+
+body.dark-mode .notif-dropdown-card .notif-tab-item {
+  color: #94a3b8 !important;
+}
+
+body.dark-mode .notif-dropdown-card .notif-tab-item.active {
+  color: #a5b4fc !important;
+}
+
+body.dark-mode .notif-dropdown-card .notif-item,
+body.dark-mode .notif-dropdown-card [class*="notification"] {
+  color: #e2e8f0;
+}
+
+/* Notification text */
+body.dark-mode .notif-dropdown-card span {
+  color: inherit;
+}
+
+body.dark-mode .notif-dropdown-card a {
+  color: #818cf8 !important;
+}
+
+/* -----------------------------
+   Notification button
+   ----------------------------- */
+
+body.dark-mode #navbar-notification-btn {
+  background: #111827 !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+
+body.dark-mode #navbar-notification-btn.active {
+  background: #1e1b4b !important;
+  border-color: #6366f1 !important;
+  color: #a5b4fc !important;
+}
+
+body.dark-mode .notif-counter-badge {
+  border-color: #111827 !important;
+}
+
+/* -----------------------------
+   Profile button
+   ----------------------------- */
+
+body.dark-mode .navbar-profile-btn {
+  background: #111827 !important;
+  border-color: #334155 !important;
+}
+
+body.dark-mode .navbar-profile-btn.active {
+  background: #1e1b4b !important;
+  border-color: #6366f1 !important;
+}
+
+body.dark-mode .navbar-user-name {
+  color: #f8fafc !important;
+}
+
+body.dark-mode .navbar-user-role {
+  color: #f87171 !important;
+}
+
+body.dark-mode .navbar-profile-btn svg {
+  color: #94a3b8 !important;
+}
+
+/* Avatar online dot */
+body.dark-mode .navbar-avatar-dot {
+  border-color: #111827 !important;
+}
+
+/* -----------------------------
+   Profile dropdown
+   ----------------------------- */
+
+body.dark-mode .navbar-dropdown-panel {
+  background: #111827 !important;
+  border-color: #334155 !important;
+  color: #e2e8f0 !important;
+}
+
+body.dark-mode .navbar-dropdown-panel button:hover {
+  background: #1e293b !important;
+}
+
+/* -----------------------------
+   Sidebar organization selector
+   ----------------------------- */
+
+body.dark-mode .sidebar .org-switcher,
+body.dark-mode .sidebar .organization-switcher,
+body.dark-mode .sidebar [class*="org-selector"],
+body.dark-mode .sidebar [class*="organization-selector"] {
+  background: #111827 !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+
+body.dark-mode .sidebar .org-switcher *,
+body.dark-mode .sidebar .organization-switcher *,
+body.dark-mode .sidebar [class*="org-selector"] *,
+body.dark-mode .sidebar [class*="organization-selector"] * {
+  color: #f8fafc !important;
+}
+
+/* Sidebar organization secondary text */
+body.dark-mode .sidebar .org-switcher .text-slate-500,
+body.dark-mode .sidebar .organization-switcher .text-slate-500 {
+  color: #94a3b8 !important;
+}
+
+/* -----------------------------
+   Navbar divider
+   ----------------------------- */
+
+body.dark-mode .navbar-actions>div[style*="width: 1px"] {
+  background: #334155 !important;
+}
+
+
+
+/* Organization selector - dark mode */
+body.dark-mode .sidebar>div:nth-child(2) {
+  background: #111827 !important;
+  border-color: #334155 !important;
+}
+
+/* Organization name */
+body.dark-mode .sidebar>div:nth-child(2) .text-slate-900,
+body.dark-mode .sidebar>div:nth-child(2) .font-semibold {
+  color: #f8fafc !important;
+}
+
+/* Administrator / secondary text */
+body.dark-mode .sidebar>div:nth-child(2) .text-slate-500,
+body.dark-mode .sidebar>div:nth-child(2) .text-slate-400 {
+  color: #94a3b8 !important;
+}
+
+/* Chevron */
+body.dark-mode .sidebar>div:nth-child(2) svg {
+  color: #94a3b8 !important;
+}
+
+
+/* ==========================================================================
+   DARK MODE - NOTIFICATION CONTENT VISIBILITY
+   ========================================================================== */
+
+/* Notification message */
+body.dark-mode .notif-dropdown-card p {
+  color: #e2e8f0 !important;
+}
+
+/* Notification time */
+body.dark-mode .notif-dropdown-card span[style*="color: #94a3b8"] {
+  color: #94a3b8 !important;
+}
+
+/* Notification item separator */
+body.dark-mode .notif-dropdown-card>div[style*="borderBottom"] {
+  border-bottom-color: #334155 !important;
+}
+
+/* Notification icon box */
+body.dark-mode .notif-dropdown-card div[style*="border: 1px solid #e2e8f0"] {
+  background: #1e293b !important;
+  border-color: #475569 !important;
+}
+
+/* Notification item background */
+body.dark-mode .notif-dropdown-card div[style*="background: rgba(238, 242, 255, 0.45)"] {
+  background: #1e1b4b !important;
 }

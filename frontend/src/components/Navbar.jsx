@@ -2,8 +2,11 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { notificationsAPI } from '../services/api';
+import { useTheme } from '../context/ThemeContext';
 import {
   Bell,
+  Sun,
+  Moon,
   Cpu,
   User,
   LogOut,
@@ -30,6 +33,7 @@ import {
 const Navbar = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const { isDark, toggleTheme } = useTheme();
 
   // Dropdown states
   const [showNotifs, setShowNotifs] = useState(false);
@@ -313,6 +317,16 @@ const Navbar = () => {
             <span>{roleConfig.label}</span>
           </div>
 
+          {/* Theme Toggle */}
+          <button
+            type="button"
+            onClick={toggleTheme}
+            className="navbar-icon-btn theme-toggle-btn"
+            title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+            aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+          >
+            {isDark ? <Sun size={18} /> : <Moon size={18} />}
+          </button>
           {/* Vertical Divider */}
           <div style={{ height: 24, width: 1, background: '#e2e8f0' }} />
 

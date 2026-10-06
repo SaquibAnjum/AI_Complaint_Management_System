@@ -62,8 +62,8 @@ const Sidebar = () => {
     role === 'ADMIN'
       ? 'Administrator'
       : user?.department
-      ? user.department
-      : 'Student / Member';
+        ? user.department
+        : 'Student / Member';
 
   const initials = userName
     .split(' ')
@@ -126,9 +126,8 @@ const Sidebar = () => {
               </div>
               <ChevronDown
                 size={16}
-                className={`text-slate-400 shrink-0 transition-transform duration-200 ${
-                  showOrgMenu ? 'rotate-180 text-indigo-600' : ''
-                }`}
+                className={`text-slate-400 shrink-0 transition-transform duration-200 ${showOrgMenu ? 'rotate-180 text-indigo-600' : ''
+                  }`}
               />
             </button>
 
@@ -268,7 +267,7 @@ const Sidebar = () => {
 
         {/* ── Bottom Section: Modern Community Poster Card ───────────── */}
         <div className="px-1 pt-4 mt-auto">
-          <div className="rounded-3xl overflow-hidden border border-[#edf0f9] bg-gradient-to-b from-[#f3f0ff] via-[#edf2fe] to-[#e4eaff] relative shadow-xs">
+          <div className="theme-poster rounded-3xl overflow-hidden border border-[#edf0f9] bg-gradient-to-b from-[#f3f0ff] via-[#edf2fe] to-[#e4eaff] relative shadow-xs">
             {/* Ambient background glows */}
             <div className="absolute top-0 right-0 w-36 h-36 bg-purple-200/50 rounded-full blur-2xl -mr-12 -mt-12 pointer-events-none" />
             <div className="absolute top-16 left-0 w-24 h-24 bg-indigo-200/40 rounded-full blur-xl -ml-8 pointer-events-none" />
@@ -311,8 +310,7 @@ const Sidebar = () => {
           <NavLink
             to="/user/dashboard"
             className={({ isActive }) =>
-              `flex flex-col items-center gap-1 text-[10px] font-medium transition-colors ${
-                isActive ? 'text-indigo-600 font-semibold' : 'text-slate-500 hover:text-slate-800'
+              `flex flex-col items-center gap-1 text-[10px] font-medium transition-colors ${isActive ? 'text-indigo-600 font-semibold' : 'text-slate-500 hover:text-slate-800'
               }`
             }
           >
@@ -323,8 +321,7 @@ const Sidebar = () => {
           <NavLink
             to="/user/submit"
             className={({ isActive }) =>
-              `flex flex-col items-center gap-1 text-[10px] font-medium transition-colors ${
-                isActive ? 'text-indigo-600 font-semibold' : 'text-slate-500 hover:text-slate-800'
+              `flex flex-col items-center gap-1 text-[10px] font-medium transition-colors ${isActive ? 'text-indigo-600 font-semibold' : 'text-slate-500 hover:text-slate-800'
               }`
             }
           >
@@ -337,8 +334,7 @@ const Sidebar = () => {
           <NavLink
             to="/user/complaints"
             className={({ isActive }) =>
-              `flex flex-col items-center gap-1 text-[10px] font-medium transition-colors ${
-                isActive ? 'text-indigo-600 font-semibold' : 'text-slate-500 hover:text-slate-800'
+              `flex flex-col items-center gap-1 text-[10px] font-medium transition-colors ${isActive ? 'text-indigo-600 font-semibold' : 'text-slate-500 hover:text-slate-800'
               }`
             }
           >
