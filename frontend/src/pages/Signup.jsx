@@ -316,11 +316,10 @@ const Signup = () => {
               <button
                 type="button"
                 onClick={() => { setSubmitError(''); setSearchParams({}); }}
-                className={`flex-1 text-xs font-semibold py-2 px-3 rounded-lg transition-all ${
-                  !isJoinMode
+                className={`flex-1 text-xs font-semibold py-2 px-3 rounded-lg transition-all ${!isJoinMode
                     ? 'bg-white text-slate-900 shadow-sm'
                     : 'text-slate-500 hover:text-slate-700'
-                }`}
+                  }`}
               >
                 <Building2 className="w-3.5 h-3.5 inline mr-1.5" />
                 Create Organization
@@ -328,11 +327,10 @@ const Signup = () => {
               <button
                 type="button"
                 onClick={() => { setSubmitError(''); setSearchParams({ org: lookupCode || 'lookup' }); }}
-                className={`flex-1 text-xs font-semibold py-2 px-3 rounded-lg transition-all ${
-                  isJoinMode
+                className={`flex-1 text-xs font-semibold py-2 px-3 rounded-lg transition-all ${isJoinMode
                     ? 'bg-white text-slate-900 shadow-sm'
                     : 'text-slate-500 hover:text-slate-700'
-                }`}
+                  }`}
               >
                 <Users className="w-3.5 h-3.5 inline mr-1.5" />
                 Join Organization
