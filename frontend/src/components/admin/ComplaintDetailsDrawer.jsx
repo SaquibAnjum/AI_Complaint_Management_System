@@ -17,8 +17,7 @@ import {
   Download,
 } from 'lucide-react';
 import { PRIORITY_STYLES, STATUS_STYLES } from './ComplaintTable';
-import { complaintsAPI } from '../../services/api';
-
+import { adminAPI, complaintsAPI } from '../../services/api';
 const ComplaintDetailsDrawer = ({
   complaint,
   isOpen,
@@ -35,7 +34,9 @@ const ComplaintDetailsDrawer = ({
   const [attachmentMimeType, setAttachmentMimeType] = useState('');
   const [attachmentLoading, setAttachmentLoading] = useState(false);
   const [attachmentError, setAttachmentError] = useState('');
-
+  const [auditTimeline, setAuditTimeline] = useState([]);
+  const [auditLoading, setAuditLoading] = useState(false);
+  const [auditError, setAuditError] = useState('');
   useEffect(() => {
     if (complaint) {
       setSelectedStatus(complaint.status || 'PENDING');
@@ -43,13 +44,9 @@ const ComplaintDetailsDrawer = ({
       setAdminNote('');
     }
   }, [complaint]);
-
-
-
   useEffect(() => {
     let cancelled = false;
     let objectUrl = null;
-
     const loadAttachment = async () => {
       if (!isOpen || !complaint?.id) {
         setAttachmentUrl(null);
@@ -58,7 +55,6 @@ const ComplaintDetailsDrawer = ({
         setAttachmentLoading(false);
         return;
       }
-
       // If this complaint explicitly does not have an attachment, skip requesting
       if (complaint.has_attachment === false) {
         setAttachmentUrl(null);
@@ -67,27 +63,21 @@ const ComplaintDetailsDrawer = ({
         setAttachmentLoading(false);
         return;
       }
-
       setAttachmentLoading(true);
       setAttachmentUrl(null);
       setAttachmentMimeType('');
       setAttachmentError('');
-
       try {
         const response = await complaintsAPI.getAttachment(complaint.id);
         const fileBlob = response instanceof Blob ? response : response?.data;
-
         if (!(fileBlob instanceof Blob) || fileBlob.size === 0) {
           throw new Error('Invalid attachment response');
         }
-
         const url = URL.createObjectURL(fileBlob);
-
         if (cancelled) {
           URL.revokeObjectURL(url);
           return;
         }
-
         objectUrl = url;
         setAttachmentUrl(url);
         const resolvedMime = (
@@ -109,32 +99,83 @@ const ComplaintDetailsDrawer = ({
         }
       }
     };
-
     loadAttachment();
-
     return () => {
       cancelled = true;
-
       if (objectUrl) {
         URL.revokeObjectURL(objectUrl);
       }
     };
   }, [isOpen, complaint?.id, complaint?.has_attachment]);
-
-
+  // Load persisted audit events from the detailed admin endpoint.
+  useEffect(() => {
+    let cancelled = false;
+    const loadAuditHistory = async () => {
+      if (!isOpen || !complaint?.id) {
+        setAuditTimeline([]);
+        setAuditError('');
+        setAuditLoading(false);
+        return;
+      }
+      setAuditLoading(true);
+      setAuditError('');
+      try {
+        // The API response interceptor returns the JSON body directly.
+        const response = await adminAPI.getComplaint(complaint.id);
+        const detail = response?.data?.complaint;
+        if (!response?.success || !detail) {
+          throw new Error(response?.message || 'Could not load complaint details');
+        }
+        const updates = Array.isArray(detail.updates) ? detail.updates : [];
+        const timeline = updates.map((item) => {
+          let action = 'Complaint updated';
+          if (item.status_from == null) {
+            action = 'Complaint submitted';
+          } else if (item.status_from !== item.status_to) {
+            action = `${item.status_from} → ${item.status_to}`;
+          }
+          const parsedTime = item.created_at ? new Date(item.created_at) : null;
+          const time = parsedTime && !Number.isNaN(parsedTime.getTime())
+            ? parsedTime.toLocaleString()
+            : 'Time unavailable';
+          return {
+            id: item.id,
+            action,
+            time,
+            note: item.remark || '',
+            by: item.user_name || 'System',
+          };
+        });
+        if (!cancelled) {
+          setAuditTimeline(timeline);
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setAuditTimeline([]);
+          setAuditError('Could not load audit history. Please try again.');
+          console.error('Audit history loading failed:', error);
+        }
+      } finally {
+        if (!cancelled) {
+          setAuditLoading(false);
+        }
+      }
+    };
+    loadAuditHistory();
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen, complaint?.id]);
   if (!isOpen || !complaint) return null;
-
   const handleCopyId = () => {
     const id = complaint.ticket_id || `CMP-${complaint.id}`;
     navigator.clipboard.writeText(id);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
-
   const handleSave = async (e) => {
     e.preventDefault();
     setIsSaving(true);
-
     const updatedData = {
       ...complaint,
       status: selectedStatus,
@@ -142,7 +183,6 @@ const ComplaintDetailsDrawer = ({
       updated_at: new Date().toISOString(),
       admin_note: adminNote,
     };
-
     try {
       if (onUpdateComplaint) {
         await onUpdateComplaint(updatedData);
@@ -151,10 +191,8 @@ const ComplaintDetailsDrawer = ({
       setIsSaving(false);
     }
   };
-
   const priorityStyle = PRIORITY_STYLES[complaint.priority] || PRIORITY_STYLES.LOW;
   const statusStyle = STATUS_STYLES[complaint.status] || 'bg-slate-50 text-slate-700 border-slate-200';
-
   return (
     <div className="fixed inset-0 z-50 overflow-hidden">
       {/* Backdrop */}
@@ -162,7 +200,6 @@ const ComplaintDetailsDrawer = ({
         className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity duration-200"
         onClick={onClose}
       />
-
       <div className="fixed inset-y-0 right-0 max-w-full flex pl-10">
         <div className="w-screen max-w-2xl bg-white shadow-2xl flex flex-col border-l border-slate-200">
           {/* Drawer Header */}
@@ -199,7 +236,6 @@ const ComplaintDetailsDrawer = ({
                 {complaint.title}
               </h2>
             </div>
-
             <button
               type="button"
               onClick={onClose}
@@ -208,7 +244,6 @@ const ComplaintDetailsDrawer = ({
               <X className="w-5 h-5" />
             </button>
           </div>
-
           {/* Navigation Tabs */}
           <div className="flex border-b border-slate-200 px-5 bg-white text-xs font-medium text-slate-600 gap-6">
             <button
@@ -228,7 +263,7 @@ const ComplaintDetailsDrawer = ({
                 }`}
             >
               <History className="w-3.5 h-3.5" />
-              Activity Audit ({complaint.timeline?.length || 3})
+              Activity Audit ({auditTimeline.length})
             </button>
             {complaint.ai_sentiment && (
               <button
@@ -243,7 +278,6 @@ const ComplaintDetailsDrawer = ({
               </button>
             )}
           </div>
-
           {/* Drawer Body */}
           <div className="flex-1 overflow-y-auto p-5 space-y-6">
             {activeTab === 'details' && (
@@ -257,7 +291,6 @@ const ComplaintDetailsDrawer = ({
                     {complaint.description}
                   </div>
                 </div>
-
                 {/* Complaint Attachment */}
                 <div className="rounded-xl border border-slate-200 bg-white p-4">
                   <div className="flex items-center justify-between mb-3">
@@ -271,13 +304,11 @@ const ComplaintDetailsDrawer = ({
                       </span>
                     )}
                   </div>
-
                   {attachmentLoading && (
                     <p className="text-sm text-slate-500">
                       Loading attachment...
                     </p>
                   )}
-
                   {!attachmentLoading && attachmentUrl && (
                     <div className="space-y-3">
                       {attachmentMimeType.startsWith('image/') ? (
@@ -308,7 +339,6 @@ const ComplaintDetailsDrawer = ({
                           {complaint.attachment_name || 'Document attachment'}
                         </div>
                       )}
-
                       <div className="flex items-center gap-3 pt-1 flex-wrap">
                         <a
                           href={attachmentUrl}
@@ -330,14 +360,12 @@ const ComplaintDetailsDrawer = ({
                       </div>
                     </div>
                   )}
-
                   {!attachmentLoading && !attachmentUrl && (
                     <p className="text-sm text-slate-500">
                       {attachmentError || 'No attachment uploaded for this complaint.'}
                     </p>
                   )}
                 </div>
-
                 {/* Submitter & Location Meta */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="bg-white rounded-lg border border-slate-200 p-3.5">
@@ -360,7 +388,6 @@ const ComplaintDetailsDrawer = ({
                       </div>
                     </div>
                   </div>
-
                   <div className="bg-white rounded-lg border border-slate-200 p-3.5">
                     <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2">
                       Location & Categorization
@@ -379,7 +406,6 @@ const ComplaintDetailsDrawer = ({
                     </div>
                   </div>
                 </div>
-
                 {/* Status Management Form */}
                 <form
                   onSubmit={handleSave}
@@ -394,7 +420,6 @@ const ComplaintDetailsDrawer = ({
                       Changes log to ticket audit
                     </span>
                   </div>
-
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {/* Status Select */}
                     <div>
@@ -413,7 +438,6 @@ const ComplaintDetailsDrawer = ({
                         <option value="CONFIRMED">Confirmed</option>
                       </select>
                     </div>
-
                     {/* Priority Select */}
                     <div>
                       <label className="block text-xs font-semibold text-slate-700 mb-1">
@@ -431,7 +455,6 @@ const ComplaintDetailsDrawer = ({
                       </select>
                     </div>
                   </div>
-
                   {/* Internal Admin Note */}
                   <div>
                     <label className="block text-xs font-semibold text-slate-700 mb-1">
@@ -445,7 +468,6 @@ const ComplaintDetailsDrawer = ({
                       className="w-full text-xs bg-white border border-slate-300 rounded-lg p-2.5 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600"
                     />
                   </div>
-
                   {/* Save button */}
                   <div className="pt-2 flex items-center justify-end gap-2">
                     <button
@@ -466,7 +488,6 @@ const ComplaintDetailsDrawer = ({
                 </form>
               </>
             )}
-
             {/* Timeline Tab */}
             {activeTab === 'timeline' && (
               <div className="space-y-4">
@@ -474,9 +495,13 @@ const ComplaintDetailsDrawer = ({
                   Complete Event History
                 </h4>
                 <div className="relative pl-6 space-y-6 before:absolute before:left-2.5 before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-200">
-                  {complaint.timeline && complaint.timeline.length > 0 ? (
-                    complaint.timeline.map((item, idx) => (
-                      <div key={idx} className="relative group">
+                  {auditLoading ? (
+                    <p className="text-xs text-slate-500">Loading audit history...</p>
+                  ) : auditError ? (
+                    <p className="text-xs text-red-600">{auditError}</p>
+                  ) : auditTimeline.length > 0 ? (
+                    auditTimeline.map((item) => (
+                      <div key={item.id} className="relative group">
                         <div className="absolute -left-6 top-1 w-3.5 h-3.5 rounded-full bg-white border-2 border-indigo-600" />
                         <div className="text-xs">
                           <span className="font-semibold text-slate-900">{item.action}</span>
@@ -492,13 +517,12 @@ const ComplaintDetailsDrawer = ({
                     ))
                   ) : (
                     <div className="text-xs text-slate-400">
-                      Standard lifecycle created at {complaint.created_at}
+                      No audit events recorded yet.
                     </div>
                   )}
                 </div>
               </div>
             )}
-
             {/* AI Advisory Tab */}
             {activeTab === 'ai' && (
               <div className="space-y-4">
@@ -511,7 +535,6 @@ const ComplaintDetailsDrawer = ({
                     Calculated based on complaint NLP content and past resolution records.
                   </p>
                 </div>
-
                 <div className="space-y-3 text-xs">
                   <div className="p-3 rounded-lg bg-slate-50 border border-slate-200">
                     <span className="font-semibold text-slate-700">AI Priority Score:</span>{' '}
@@ -546,5 +569,4 @@ const ComplaintDetailsDrawer = ({
     </div>
   );
 };
-
 export default ComplaintDetailsDrawer;
