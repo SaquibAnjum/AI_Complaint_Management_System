@@ -209,16 +209,25 @@ const SubmitComplaint = () => {
     setSubmitting(true);
 
     try {
-      const payload = {
-        title: formData.title.trim(),
-        description: formData.description.trim(),
-        category: formData.category,
-        priority: formData.priority,
-        location: formData.location.trim() || undefined,
-      };
+
+      const payload = new FormData();
+
+      payload.append('title', formData.title.trim());
+      payload.append('description', formData.description.trim());
+      payload.append('category', formData.category);
+      payload.append('priority', formData.priority);
+
+      if (formData.location.trim()) {
+        payload.append('location', formData.location.trim());
+      }
+
+      if (attachedFile) {
+        payload.append('attachment', attachedFile);
+      }
 
       try {
         const res = await complaintsAPI.create(payload);
+
 
         if (!res.success || !res.data?.complaint) {
           throw new Error(res.message || 'Complaint submission failed');
@@ -420,8 +429,8 @@ const SubmitComplaint = () => {
                 }
                 placeholder="Briefly describe your issue (e.g. Water leakage in Hostel Block B - Room 304)"
                 className={`w-full text-sm px-4 py-3 rounded-xl border ${fieldErrors.title
-                    ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/20'
-                    : 'border-slate-200 focus:border-indigo-500 bg-slate-50/40'
+                  ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/20'
+                  : 'border-slate-200 focus:border-indigo-500 bg-slate-50/40'
                   } text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-indigo-500/10 transition-all`}
               />
 
@@ -454,14 +463,14 @@ const SubmitComplaint = () => {
                         handleChange('category', cat.id)
                       }
                       className={`p-3.5 rounded-xl border text-left transition-all duration-200 ${isSelected
-                          ? 'border-indigo-500 bg-indigo-50 shadow-sm ring-2 ring-indigo-500/10'
-                          : 'border-slate-200 bg-white hover:border-indigo-200 hover:bg-indigo-50/30 hover:-translate-y-0.5 hover:shadow-sm'
+                        ? 'border-indigo-500 bg-indigo-50 shadow-sm ring-2 ring-indigo-500/10'
+                        : 'border-slate-200 bg-white hover:border-indigo-200 hover:bg-indigo-50/30 hover:-translate-y-0.5 hover:shadow-sm'
                         }`}
                     >
                       <span
                         className={`block text-sm font-bold ${isSelected
-                            ? 'text-indigo-700'
-                            : 'text-slate-800'
+                          ? 'text-indigo-700'
+                          : 'text-slate-800'
                           }`}
                       >
                         {cat.label}
@@ -500,15 +509,15 @@ const SubmitComplaint = () => {
                         handleChange('priority', pri.id)
                       }
                       className={`p-3 rounded-xl border text-left transition-all duration-200 ${isSelected
-                          ? 'border-indigo-600 bg-indigo-50/40 ring-1 ring-indigo-600'
-                          : 'border-slate-200 bg-white hover:border-indigo-200 hover:bg-indigo-50/30 hover:-translate-y-0.5 hover:shadow-sm'
+                        ? 'border-indigo-600 bg-indigo-50/40 ring-1 ring-indigo-600'
+                        : 'border-slate-200 bg-white hover:border-indigo-200 hover:bg-indigo-50/30 hover:-translate-y-0.5 hover:shadow-sm'
                         }`}
                     >
                       <div className="flex items-center justify-between mb-1">
                         <span
                           className={`text-sm font-bold ${isSelected
-                              ? 'text-indigo-700'
-                              : 'text-slate-800'
+                            ? 'text-indigo-700'
+                            : 'text-slate-800'
                             }`}
                         >
                           {pri.label}
@@ -542,8 +551,8 @@ const SubmitComplaint = () => {
 
                 <span
                   className={`text-xs font-mono ${formData.description.length > MAX_CHARS
-                      ? 'text-rose-600 font-semibold'
-                      : 'text-slate-500'
+                    ? 'text-rose-600 font-semibold'
+                    : 'text-slate-500'
                     }`}
                 >
                   {formData.description.length} / {MAX_CHARS} characters
@@ -561,8 +570,8 @@ const SubmitComplaint = () => {
                 }}
                 placeholder="Explain what happened in as much detail as possible. Include exact room number, floor, when the issue started, and any immediate disruption caused..."
                 className={`w-full text-sm p-4 rounded-xl border ${fieldErrors.description
-                    ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/20'
-                    : 'border-slate-200 focus:border-indigo-500 bg-slate-50/40'
+                  ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/20'
+                  : 'border-slate-200 focus:border-indigo-500 bg-slate-50/40'
                   } text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-indigo-500/10 transition-all leading-relaxed min-h-[150px]`}
               />
 
@@ -671,8 +680,8 @@ const SubmitComplaint = () => {
                   onDragLeave={() => setIsDragging(false)}
                   onDrop={handleFileDrop}
                   className={`border-2 border-dashed rounded-2xl p-8 text-center transition-all duration-200 ${isDragging
-                      ? 'border-indigo-500 bg-indigo-50 shadow-sm'
-                      : 'border-slate-200 hover:border-indigo-300 hover:bg-indigo-50/20 bg-slate-50/60'
+                    ? 'border-indigo-500 bg-indigo-50 shadow-sm'
+                    : 'border-slate-200 hover:border-indigo-300 hover:bg-indigo-50/20 bg-slate-50/60'
                     }`}
                 >
                   <UploadCloud className="w-8 h-8 text-slate-400 mx-auto mb-2" />

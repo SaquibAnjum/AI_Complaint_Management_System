@@ -46,7 +46,18 @@ const ManageComplaints = () => {
     if (queryParam) setSearchQuery(queryParam);
     const statusParam = searchParams.get('status');
     if (statusParam) setStatusFilter(statusParam);
-  }, [searchParams]);
+
+    const ticketParam = searchParams.get('ticket') || searchParams.get('id');
+    if (ticketParam && complaints.length > 0) {
+      const match = complaints.find(
+        (c) => String(c.id) === String(ticketParam) || c.ticket_id === ticketParam
+      );
+      if (match) {
+        setSelectedComplaint(match);
+        setDrawerOpen(true);
+      }
+    }
+  }, [searchParams, complaints]);
 
   // Load from backend if available
   useEffect(() => {
@@ -112,6 +123,20 @@ const ManageComplaints = () => {
   const handleSelectComplaint = (complaint) => {
     setSelectedComplaint(complaint);
     setDrawerOpen(true);
+    setSearchParams((prev) => {
+      const updated = new URLSearchParams(prev);
+      updated.set('ticket', complaint.id);
+      return updated;
+    });
+  };
+
+  const handleCloseDrawer = () => {
+    setDrawerOpen(false);
+    setSearchParams((prev) => {
+      const updated = new URLSearchParams(prev);
+      updated.delete('ticket');
+      return updated;
+    });
   };
 
   const handleUpdateComplaint = async (updatedData) => {
@@ -241,7 +266,7 @@ const ManageComplaints = () => {
       <ComplaintDetailsDrawer
         complaint={selectedComplaint}
         isOpen={drawerOpen}
-        onClose={() => setDrawerOpen(false)}
+        onClose={handleCloseDrawer}
         onUpdateComplaint={handleUpdateComplaint}
       />
     </div>

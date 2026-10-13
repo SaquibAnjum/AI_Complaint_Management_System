@@ -1096,21 +1096,132 @@ a:hover {
   gap: 10px;
 }
 
-/* Responsive */
+/* =========================================================
+   RESPONSIVE APP SHELL
+   ========================================================= */
+
+.mobile-bottom-nav {
+  display: none !important;
+}
+
 @media (max-width: 900px) {
   .app-layout {
-    flex-direction: column;
+    display: flex;
+    flex-direction: row;
+    min-width: 0;
   }
 
+  /* Desktop sidebar is replaced by mobile bottom navigation */
   .sidebar {
+    display: none !important;
+  }
+
+  .main-content-wrapper {
     width: 100%;
-    height: auto;
-    position: relative;
+    max-width: 100%;
+    min-width: 0;
   }
 
   .page-container {
-    padding: 16px;
+    width: 100%;
+    max-width: 100%;
+    padding: 16px !important;
   }
+
+  /* Show navigation for both ADMIN and USER */
+  .mobile-bottom-nav {
+    display: flex !important;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 60;
+    min-height: 64px;
+    padding: 8px 12px calc(8px + env(safe-area-inset-bottom));
+    justify-content: space-around;
+    align-items: center;
+  }
+
+  /* Keep page content above the fixed bottom navigation */
+  .main-content-wrapper main {
+    padding-bottom: calc(76px + env(safe-area-inset-bottom));
+  }
+
+  /* Compact navbar */
+  .navbar {
+    padding-left: 14px !important;
+    padding-right: 14px !important;
+    gap: 8px;
+  }
+
+  .navbar-brand {
+    min-width: 0;
+    gap: 8px;
+  }
+
+  .navbar-brand-title {
+    font-size: 1rem !important;
+    white-space: nowrap;
+  }
+
+  .navbar-actions {
+    gap: 8px !important;
+    min-width: 0;
+  }
+}
+
+/* Small phones */
+@media (max-width: 480px) {
+  .navbar {
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+  }
+
+  .navbar-role-pill {
+    display: none !important;
+  }
+
+  .navbar-actions>div[style*="width: 1px"] {
+    display: none !important;
+  }
+
+  .navbar-user-text {
+    display: none !important;
+  }
+
+  .navbar-profile-btn {
+    gap: 4px !important;
+    padding: 3px 5px 3px 3px !important;
+  }
+
+  .navbar-icon-btn {
+    width: 34px !important;
+    height: 34px !important;
+  }
+
+  /* Keep notification dropdown inside the phone viewport */
+  .notif-dropdown-card {
+    right: -56px !important;
+    width: calc(100vw - 16px) !important;
+    max-width: calc(100vw - 16px) !important;
+  }
+
+  .navbar-dropdown-panel:not(.notif-dropdown-card) {
+    max-width: calc(100vw - 16px) !important;
+  }
+}
+
+/* Extra-small phones */
+@media (max-width: 370px) {
+  .navbar-brand-title {
+    display: none !important;
+  }
+}
+
+/* Bottom navigation should follow the active theme */
+body.dark-mode .mobile-bottom-nav {
+  background: rgba(17, 24, 39, 0.96) !important;
+  border-top-color: #334155 !important;
 }
 
 

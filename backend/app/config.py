@@ -15,6 +15,11 @@ class Config:
     SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-key-change-in-production-123456")
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
+    # File Upload Settings
+    UPLOAD_FOLDER = os.path.join(BASE_DIR, "uploads")
+    MAX_CONTENT_LENGTH = 11 * 1024 * 1024  # 11 MB request limit
+
+
     # JWT Settings
     JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "jwt-secret-key-change-in-production-654321")
     jwt_hours = int(os.getenv("JWT_ACCESS_TOKEN_EXPIRES_HOURS", "24"))

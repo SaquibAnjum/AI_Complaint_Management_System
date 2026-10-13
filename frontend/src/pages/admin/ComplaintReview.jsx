@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { adminAPI } from '../../services/api';
+import { adminAPI, complaintsAPI } from '../../services/api';
 import { useToast } from '../../components/Toast';
 import { ComplaintStatusBadge, PriorityBadge } from '../../components/ComplaintStatusBadge';
 import ComplaintTimeline from '../../components/ComplaintTimeline';
@@ -16,6 +16,9 @@ import {
   CheckCircle,
   Clock,
   AlertCircle,
+  Eye,
+  Download,
+  Paperclip,
 } from 'lucide-react';
 
 const ComplaintReview = () => {
@@ -31,6 +34,11 @@ const ComplaintReview = () => {
   const [status, setStatus] = useState('');
 
   const { toastSuccess, toastError } = useToast();
+
+  const [attachmentUrl, setAttachmentUrl] = useState(null);
+  const [attachmentMimeType, setAttachmentMimeType] = useState('');
+  const [attachmentLoading, setAttachmentLoading] = useState(false);
+  const [attachmentError, setAttachmentError] = useState('');
 
   const loadData = async () => {
     try {
@@ -61,6 +69,69 @@ const ComplaintReview = () => {
   useEffect(() => {
     loadData();
   }, [id]);
+
+  useEffect(() => {
+    let cancelled = false;
+    let objectUrl = null;
+
+    const loadAttachment = async () => {
+      if (!complaint?.id || complaint?.has_attachment === false) {
+        setAttachmentUrl(null);
+        setAttachmentMimeType('');
+        setAttachmentError('');
+        setAttachmentLoading(false);
+        return;
+      }
+
+      setAttachmentLoading(true);
+      setAttachmentUrl(null);
+      setAttachmentMimeType('');
+      setAttachmentError('');
+
+      try {
+        const response = await complaintsAPI.getAttachment(complaint.id);
+        const fileBlob = response instanceof Blob ? response : response?.data;
+
+        if (!(fileBlob instanceof Blob) || fileBlob.size === 0) {
+          throw new Error('Invalid attachment response');
+        }
+
+        const url = URL.createObjectURL(fileBlob);
+
+        if (cancelled) {
+          URL.revokeObjectURL(url);
+          return;
+        }
+
+        objectUrl = url;
+        setAttachmentUrl(url);
+        const resolvedMime = (
+          fileBlob.type ||
+          complaint.attachment_mime_type ||
+          (complaint.attachment_name?.toLowerCase().endsWith('.pdf') ? 'application/pdf' : '') ||
+          (complaint.attachment_name?.toLowerCase().match(/\.(jpe?g|png|webp)$/i) ? 'image/jpeg' : '')
+        );
+        setAttachmentMimeType(resolvedMime);
+      } catch (error) {
+        if (!cancelled) {
+          setAttachmentError('No attachment found, or the file could not be loaded.');
+        }
+      } finally {
+        if (!cancelled) {
+          setAttachmentLoading(false);
+        }
+      }
+    };
+
+    loadAttachment();
+
+    return () => {
+      cancelled = true;
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl);
+      }
+    };
+  }, [complaint?.id, complaint?.has_attachment]);
 
   const handleMarkReview = async () => {
     try {
@@ -188,6 +259,76 @@ const ComplaintReview = () => {
             {complaint.description}
           </p>
         </div>
+
+        {/* Complaint Attachment */}
+        {(complaint.has_attachment || attachmentUrl || attachmentLoading) && (
+          <div style={{ marginTop: 20, paddingTop: 18, borderTop: '1px solid var(--border-light)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+              <h4 style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-secondary)' }}>
+                Complaint Attachment
+              </h4>
+              {complaint.attachment_name && (
+                <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                  {complaint.attachment_name} {complaint.attachment_size && `(${complaint.attachment_size})`}
+                </span>
+              )}
+            </div>
+
+            {attachmentLoading && (
+              <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>Loading attachment...</p>
+            )}
+
+            {!attachmentLoading && attachmentUrl && (
+              <div>
+                {attachmentMimeType.startsWith('image/') ? (
+                  <div style={{ marginBottom: 14 }}>
+                    <a href={attachmentUrl} target="_blank" rel="noopener noreferrer" title="Open full-size image">
+                      <img
+                        src={attachmentUrl}
+                        alt={complaint.attachment_name || "Attachment"}
+                        style={{ maxHeight: 380, maxWidth: '100%', borderRadius: 8, border: '1px solid var(--border-light)', objectFit: 'contain' }}
+                      />
+                    </a>
+                  </div>
+                ) : attachmentMimeType === 'application/pdf' || complaint.attachment_name?.toLowerCase().endsWith('.pdf') ? (
+                  <div style={{ marginBottom: 14 }}>
+                    <iframe
+                      src={attachmentUrl}
+                      title={complaint.attachment_name || "PDF Document"}
+                      style={{ width: '100%', height: 380, borderRadius: 8, border: '1px solid var(--border-light)' }}
+                    />
+                  </div>
+                ) : (
+                  <div style={{ padding: '10px 14px', background: 'var(--bg-light)', borderRadius: 8, marginBottom: 14, fontSize: '0.875rem' }}>
+                    {complaint.attachment_name || 'Document attachment'}
+                  </div>
+                )}
+
+                <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+                  <a
+                    href={attachmentUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn btn-outline btn-sm"
+                  >
+                    <Eye size={14} /> View in New Tab
+                  </a>
+                  <a
+                    href={attachmentUrl}
+                    download={complaint.attachment_name || (attachmentMimeType.startsWith('image/') ? 'attachment.png' : 'attachment.pdf')}
+                    className="btn btn-secondary btn-sm"
+                  >
+                    <Download size={14} /> Download Attachment
+                  </a>
+                </div>
+              </div>
+            )}
+
+            {!attachmentLoading && !attachmentUrl && attachmentError && (
+              <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>{attachmentError}</p>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Side-by-Side: AI Suggestions vs. Admin Final Classification */}

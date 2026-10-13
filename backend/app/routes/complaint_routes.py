@@ -1,7 +1,12 @@
 """User and institutional complaint API routes with strict organization isolation."""
+import os
+import uuid
 
+from flask import Blueprint, request, current_app, send_from_directory
+from werkzeug.utils import secure_filename
+
+from app.models.complaint_attachment import ComplaintAttachment
 from datetime import datetime, timezone
-from flask import Blueprint, request
 from flask_jwt_extended import jwt_required
 from app.extensions import db
 from app.models.complaint import Complaint, ComplaintStatus
@@ -19,16 +24,87 @@ from app.services.notification_service import notification_service
 complaint_bp = Blueprint("complaints", __name__, url_prefix="/api/complaints")
 
 
+
 @complaint_bp.route("", methods=["POST"])
 @jwt_required()
 def create_complaint():
-    """Submit a new complaint with automatic AI classification and organization scoping."""
+    """Submit a complaint with optional file attachment and AI classification."""
     user = get_current_user()
-    if not user:
-        return api_response(success=False, message="User not authenticated", error="UNAUTHORIZED", status_code=401)
 
-    payload = request.get_json(silent=True) or {}
-    errors = validate_complaint_data(payload, allow_classification=True)
+    if not user:
+        return api_response(
+            success=False,
+            message="User not authenticated",
+            error="UNAUTHORIZED",
+            status_code=401,
+        )
+
+    # Support both existing JSON requests and multipart file uploads.
+    if request.is_json:
+        payload = request.get_json(silent=True) or {}
+    else:
+        payload = request.form.to_dict()
+
+    uploaded_file = request.files.get("attachment")
+
+    # Validate file before creating the complaint.
+    allowed_extensions = {"jpg", "jpeg", "png", "webp", "pdf"}
+    allowed_mime_types = {
+        "image/jpeg",
+        "image/png",
+        "image/webp",
+        "application/pdf",
+    }
+
+    original_filename = None
+    stored_filename = None
+    upload_path = None
+    file_size = 0
+    mime_type = None
+
+    if uploaded_file and uploaded_file.filename:
+        original_filename = secure_filename(uploaded_file.filename)
+
+        if not original_filename or "." not in original_filename:
+            return api_response(
+                success=False,
+                message="Invalid attachment filename",
+                error="INVALID_ATTACHMENT",
+                status_code=422,
+            )
+
+        extension = original_filename.rsplit(".", 1)[1].lower()
+        mime_type = uploaded_file.mimetype
+
+        if (
+            extension not in allowed_extensions
+            or mime_type not in allowed_mime_types
+        ):
+            return api_response(
+                success=False,
+                message="Only JPG, PNG, WEBP, and PDF files are allowed",
+                error="INVALID_ATTACHMENT_TYPE",
+                status_code=422,
+            )
+
+        # Check the actual uploaded size (maximum 10 MB).
+        uploaded_file.stream.seek(0, os.SEEK_END)
+        file_size = uploaded_file.stream.tell()
+        uploaded_file.stream.seek(0)
+
+        if file_size == 0 or file_size > 10 * 1024 * 1024:
+            return api_response(
+                success=False,
+                message="Attachment must be smaller than or equal to 10 MB",
+                error="INVALID_ATTACHMENT_SIZE",
+                status_code=422,
+            )
+
+    errors = validate_complaint_data(
+        payload,
+        allow_classification=True,
+    )
+
     if errors:
         return api_response(
             success=False,
@@ -38,28 +114,36 @@ def create_complaint():
             status_code=422,
         )
 
-    title = payload.get("title").strip()
-    description = payload.get("description").strip()
+    title = payload.get("title", "").strip()
+    description = payload.get("description", "").strip()
 
-    # Step 1: AI Assisted Analysis via Gemini Service
-    ai_result = ai_service.analyze_complaint(title=title, description=description)
+    # AI-assisted complaint analysis.
+    ai_result = ai_service.analyze_complaint(
+        title=title,
+        description=description,
+    )
 
-    # Initial classification: user can provide hints or defaults to AI recommendation
-    initial_category = payload.get("category") or ai_result.get("category") or "Other"
-    initial_priority = payload.get("priority") or ai_result.get("priority") or "MEDIUM"
+    initial_category = (
+        payload.get("category")
+        or ai_result.get("category")
+        or "Other"
+    )
+    initial_priority = (
+        payload.get("priority")
+        or ai_result.get("priority")
+        or "MEDIUM"
+    )
 
     ai_department = ai_result.get("department")
-
     if ai_department not in ALLOWED_DEPARTMENTS:
         ai_department = "Administration"
-        
+
     initial_department = (
-    payload.get("department")
-    or ai_department
+        payload.get("department") or ai_department
     )
 
     complaint = Complaint(
-        organization_id=user.organization_id,  # Strictly derived from authenticated user
+        organization_id=user.organization_id,
         user_id=user.id,
         title=title,
         description=description,
@@ -75,24 +159,69 @@ def create_complaint():
         status=ComplaintStatus.PENDING,
     )
 
-    db.session.add(complaint)
-    db.session.flush()  # Generate complaint.id
+    try:
+        db.session.add(complaint)
+        db.session.flush()
 
-    # Step 2: Log initial timeline event
-    initial_update = ComplaintUpdate(
-        organization_id=user.organization_id,
-        complaint_id=complaint.id,
-        user_id=user.id,
-        status_from=None,
-        status_to=ComplaintStatus.PENDING,
-        remark=f"Complaint filed by {user.name}. AI suggested category: '{complaint.ai_category}', priority: '{complaint.ai_priority}'.",
-    )
-    db.session.add(initial_update)
+        # Save the file and its database metadata, if provided.
+        if uploaded_file and original_filename:
+            upload_folder = current_app.config["UPLOAD_FOLDER"]
+            os.makedirs(upload_folder, exist_ok=True)
 
-    # Step 3: Send confirmation notification
-    notification_service.notify_complaint_submitted(complaint)
+            extension = original_filename.rsplit(".", 1)[1].lower()
+            stored_filename = f"{uuid.uuid4().hex}.{extension}"
+            upload_path = os.path.join(
+                upload_folder,
+                stored_filename,
+            )
 
-    db.session.commit()
+            uploaded_file.save(upload_path)
+
+            attachment = ComplaintAttachment(
+                complaint_id=complaint.id,
+                original_filename=original_filename,
+                stored_filename=stored_filename,
+                mime_type=mime_type,
+                size_bytes=file_size,
+            )
+            db.session.add(attachment)
+
+        # Preserve the existing initial timeline event.
+        initial_update = ComplaintUpdate(
+            organization_id=user.organization_id,
+            complaint_id=complaint.id,
+            user_id=user.id,
+            status_from=None,
+            status_to=ComplaintStatus.PENDING,
+            remark=(
+                f"Complaint filed by {user.name}. "
+                f"AI suggested category: '{complaint.ai_category}', "
+                f"priority: '{complaint.ai_priority}'."
+            ),
+        )
+        db.session.add(initial_update)
+
+        # Preserve the existing submission notification.
+        notification_service.notify_complaint_submitted(complaint)
+
+        db.session.commit()
+
+    except Exception:
+        db.session.rollback()
+
+        # Remove the saved file if the database operation fails.
+        if upload_path and os.path.exists(upload_path):
+            os.remove(upload_path)
+
+        current_app.logger.exception(
+            "Failed to create complaint or save its attachment"
+        )
+        return api_response(
+            success=False,
+            message="Unable to submit complaint. Please try again.",
+            error="COMPLAINT_CREATION_FAILED",
+            status_code=500,
+        )
 
     return api_response(
         success=True,
@@ -100,6 +229,7 @@ def create_complaint():
         data={"complaint": complaint.to_dict(include_details=True)},
         status_code=201,
     )
+
 
 
 @complaint_bp.route("", methods=["GET"])
@@ -202,6 +332,73 @@ def get_complaint_details(complaint_id):
         message="Complaint details retrieved successfully",
         data={"complaint": complaint.to_dict(include_details=True)},
         status_code=200,
+    )
+
+
+
+@complaint_bp.route("/<int:complaint_id>/attachment", methods=["GET"])
+@jwt_required()
+def get_complaint_attachment(complaint_id):
+    """Serve an attachment only to authorized users in the same organization."""
+    user = get_current_user()
+
+    if not user:
+        return api_response(
+            success=False,
+            message="User not authenticated",
+            error="UNAUTHORIZED",
+            status_code=401,
+        )
+
+    complaint = Complaint.query.filter_by(
+        id=complaint_id,
+        organization_id=user.organization_id,
+    ).first()
+
+    if not complaint:
+        return api_response(
+            success=False,
+            message="Complaint not found in your organization",
+            error="COMPLAINT_NOT_FOUND",
+            status_code=404,
+        )
+
+    # Regular users can only access their own complaint attachments.
+    if user.role == UserRole.USER and complaint.user_id != user.id:
+        return api_response(
+            success=False,
+            message="You do not have permission to view this attachment",
+            error="FORBIDDEN",
+            status_code=403,
+        )
+
+    attachment = complaint.attachment
+
+    if not attachment:
+        return api_response(
+            success=False,
+            message="No attachment found for this complaint",
+            error="ATTACHMENT_NOT_FOUND",
+            status_code=404,
+        )
+
+    upload_folder = current_app.config["UPLOAD_FOLDER"]
+    file_path = os.path.join(upload_folder, attachment.stored_filename)
+
+    if not os.path.exists(file_path):
+        return api_response(
+            success=False,
+            message="Attachment file not found on server",
+            error="FILE_NOT_FOUND",
+            status_code=404,
+        )
+
+    return send_from_directory(
+        upload_folder,
+        attachment.stored_filename,
+        mimetype=attachment.mime_type,
+        as_attachment=False,
+        download_name=attachment.original_filename,
     )
 
 

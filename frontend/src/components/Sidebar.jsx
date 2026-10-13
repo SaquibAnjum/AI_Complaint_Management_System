@@ -306,7 +306,7 @@ const Sidebar = () => {
 
       {/* Mobile Bottom Navigation Bar (Shown on small screens for User) */}
       {role === 'USER' && (
-        <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-slate-200 z-40 px-4 py-2 flex items-center justify-around shadow-lg">
+        <div className="mobile-bottom-nav fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-slate-200 z-40 px-4 py-2 flex items-center justify-around shadow-lg">
           <NavLink
             to="/user/dashboard"
             className={({ isActive }) =>
@@ -340,6 +340,51 @@ const Sidebar = () => {
           >
             <FileText size={18} />
             <span>Complaints</span>
+          </NavLink>
+        </div>
+      )}
+
+      {/* Mobile Bottom Navigation for Admin */}
+      {role === 'ADMIN' && (
+        <div className="mobile-bottom-nav fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-slate-200 z-40 px-3 py-2 flex items-center justify-around shadow-lg">
+          <NavLink
+            to="/admin/dashboard"
+            end
+            className={({ isActive }) =>
+              `flex flex-1 flex-col items-center justify-center gap-1 text-[10px] font-medium transition-colors ${isActive
+                ? 'text-indigo-600 font-semibold'
+                : 'text-slate-500 hover:text-slate-800'
+              }`
+            }
+          >
+            <Home size={19} />
+            <span>Overview</span>
+          </NavLink>
+
+          <NavLink
+            to="/admin/complaints"
+            className={({ isActive }) =>
+              `flex flex-1 flex-col items-center justify-center gap-1 text-[10px] font-medium transition-colors ${isActive
+                ? 'text-indigo-600 font-semibold'
+                : 'text-slate-500 hover:text-slate-800'
+              }`
+            }
+          >
+            <FileText size={19} />
+            <span>Complaints</span>
+          </NavLink>
+
+          <NavLink
+            to="/admin/users"
+            className={({ isActive }) =>
+              `flex flex-1 flex-col items-center justify-center gap-1 text-[10px] font-medium transition-colors ${isActive
+                ? 'text-indigo-600 font-semibold'
+                : 'text-slate-500 hover:text-slate-800'
+              }`
+            }
+          >
+            <Users size={19} />
+            <span>Users</span>
           </NavLink>
         </div>
       )}

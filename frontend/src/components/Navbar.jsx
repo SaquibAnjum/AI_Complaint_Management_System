@@ -255,17 +255,53 @@ const Navbar = () => {
     return true;
   });
 
-  const formatRelativeTime = (isoString) => {
-    if (!isoString) return '';
-    const now = new Date();
-    const date = new Date(isoString);
-    const diffMin = Math.floor((now - date) / 60000);
-    const diffHours = Math.floor(diffMin / 60);
+  const formatRelativeTime = (timestamp) => {
+    if (!timestamp) return '';
 
-    if (diffMin < 1) return 'Just now';
-    if (diffMin < 60) return `${diffMin}m ago`;
+    const timestampText = String(timestamp).trim();
+
+    // The database may return a UTC timestamp without a timezone suffix.
+    // Treat timezone-less timestamps as UTC instead of browser-local time.
+    const hasTimezone = /(?:Z|[+-]\d{2}:?\d{2})$/i.test(timestampText);
+
+    const date = new Date(
+      hasTimezone ? timestampText : `${timestampText}Z`
+    );
+
+    if (Number.isNaN(date.getTime())) {
+      return '';
+    }
+
+    const diffMs = Date.now() - date.getTime();
+
+    // Handle future timestamps without displaying a misleading "ago" value.
+    if (diffMs < 0) {
+      const futureMinutes = Math.ceil(-diffMs / 60000);
+
+      if (futureMinutes <= 1) return 'Just now';
+      if (futureMinutes < 60) return `in ${futureMinutes}m`;
+
+      const futureHours = Math.ceil(futureMinutes / 60);
+
+      if (futureHours < 24) return `in ${futureHours}h`;
+
+      return date.toLocaleDateString([], {
+        month: 'short',
+        day: 'numeric',
+      });
+    }
+
+    const diffMinutes = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMinutes / 60);
+
+    if (diffMinutes < 1) return 'Just now';
+    if (diffMinutes < 60) return `${diffMinutes}m ago`;
     if (diffHours < 24) return `${diffHours}h ago`;
-    return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+
+    return date.toLocaleDateString([], {
+      month: 'short',
+      day: 'numeric',
+    });
   };
 
   return (

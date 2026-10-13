@@ -48,9 +48,23 @@ api.interceptors.response.use(
 
 // Complaint Endpoints
 export const complaintsAPI = {
-  create: (data) => api.post('/complaints', data),
+  create: (data) => {
+    if (data instanceof FormData) {
+      return api.post('/complaints', data, {
+        headers: {
+          'Content-Type': undefined,
+        },
+      });
+    }
+
+    return api.post('/complaints', data);
+  },
   list: (params) => api.get('/complaints', { params }),
   getDetails: (id) => api.get(`/complaints/${id}`),
+  getAttachment: (id) =>
+    api.get(`/complaints/${id}/attachment`, {
+      responseType: 'blob',
+    }),
   update: (id, data) => api.put(`/complaints/${id}`, data),
   confirmResolution: (id) => api.post(`/complaints/${id}/confirm`),
   rejectResolution: (id, data) => api.post(`/complaints/${id}/reject`, data),

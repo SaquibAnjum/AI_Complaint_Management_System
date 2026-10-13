@@ -6,6 +6,7 @@ from app.models.complaint import Complaint, ComplaintStatus
 from app.models.complaint_update import ComplaintUpdate
 from app.models.feedback import Feedback
 from app.models.notification import Notification
+from app.models.complaint_attachment import ComplaintAttachment
 
 __all__ = [
     "Organization",
@@ -18,4 +19,5 @@ __all__ = [
     "ComplaintUpdate",
     "Feedback",
     "Notification",
+    "ComplaintAttachment"
 ]
