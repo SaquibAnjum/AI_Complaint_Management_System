@@ -242,18 +242,45 @@ const Navbar = () => {
     };
   };
 
+
+
   const filteredNotifications = notifications.filter((n) => {
-    if (notifFilter === 'unread') return !n.is_read;
+    if (notifFilter === 'unread') {
+      return !n.is_read;
+    }
+
     if (notifFilter === 'role') {
       const text = (n.message || '').toLowerCase();
+
       if (user?.role === 'ADMIN') {
-        return text.includes('admin') || text.includes('alert') || text.includes('escalat') || text.includes('status') || text.includes('complaint') || text.includes('feedback');
+        return (
+          text.includes('admin') ||
+          text.includes('alert') ||
+          text.includes('escalat') ||
+          text.includes('status') ||
+          text.includes('complaint') ||
+          text.includes('feedback')
+        );
       }
 
-      return text.includes('submitted') || text.includes('status') || text.includes('resolved') || text.includes('assigned');
+      // Show progress updates, not initial submission acknowledgements.
+      return (
+        Boolean(n.complaint_id) &&
+        (
+          text.includes('status changed to:') ||
+          text.includes('status updated to:') ||
+          text.includes('has been reopened') ||
+          text.includes('resolved') ||
+          text.includes('confirmed') ||
+          text.includes('assigned')
+        )
+      );
     }
+
     return true;
   });
+
+
 
   const formatRelativeTime = (timestamp) => {
     if (!timestamp) return '';
@@ -526,8 +553,9 @@ const Navbar = () => {
                               {n.message}
                             </p>
                             {n.complaint_id && (
-                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: '0.72rem', fontWeight: 600, color: '#4f46e5', marginTop: 4 }}>
-                                Open Ticket #{n.complaint_id} <ExternalLink size={11} />
+                              <span style={{ fontSize: '0.72rem', fontWeight: 600, color: '#4f46e5', marginTop: 4 }}>
+                                Open Ticket {n.ticket_id || `CMP-${n.complaint_id}`}{" "}
+                                <ExternalLink size={11} />
                               </span>
                             )}
                           </div>

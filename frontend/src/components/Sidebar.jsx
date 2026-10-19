@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import { notificationsAPI } from '../services/api';
 import campusBannerImg from '../assets/campus_banner.jpg';
 import {
@@ -21,6 +22,7 @@ import {
 
 const Sidebar = () => {
   const { user, logout } = useAuth();
+  const { isDark } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
   const role = user?.role;
@@ -41,6 +43,7 @@ const Sidebar = () => {
         // Fallback default
       }
     };
+
     fetchUnread();
   }, []);
 
@@ -51,13 +54,17 @@ const Sidebar = () => {
         setShowOrgMenu(false);
       }
     };
+
     document.addEventListener('mousedown', handleClickOutside);
+
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   const userName = user?.name || (role === 'ADMIN' ? 'Admin' : 'User');
   const userEmail = user?.email || '';
-  const orgName = user?.organization_name || user?.org?.name || 'ABC University';
+  const orgName =
+    user?.organization_name || user?.org?.name || 'ABC University';
+
   const roleSubtitle =
     role === 'ADMIN'
       ? 'Administrator'
@@ -76,17 +83,26 @@ const Sidebar = () => {
     if (exact) {
       return location.pathname === basePath;
     }
-    return location.pathname === basePath || location.pathname.startsWith(`${basePath}/`);
+
+    return (
+      location.pathname === basePath ||
+      location.pathname.startsWith(`${basePath}/`)
+    );
   };
 
   return (
     <>
       <aside className="sidebar no-scrollbar px-3 py-4 flex flex-col justify-between select-none">
         <div>
-          {/* ── Brand Header ────────────────────────────────────────── */}
+          {/* Brand Header */}
           <div className="flex items-center gap-3 px-2 pt-1 pb-4">
             <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#4361ee] via-[#5c3fe6] to-[#7b2cbf] flex items-center justify-center shadow-md shadow-indigo-500/25 shrink-0">
-              <svg width="21" height="21" viewBox="0 0 24 24" fill="none">
+              <svg
+                width="21"
+                height="21"
+                viewBox="0 0 24 24"
+                fill="none"
+              >
                 <path
                   d="M19 4H5a3 3 0 0 0-3 3v8a3 3 0 0 0 3 3h2v3l4.5-3H19a3 3 0 0 0 3-3V7a3 3 0 0 0-3-3z"
                   fill="white"
@@ -96,6 +112,7 @@ const Sidebar = () => {
                 <circle cx="16" cy="11" r="1.3" fill="#583ee8" />
               </svg>
             </div>
+
             <div className="flex flex-col min-w-0">
               <h1 className="font-extrabold text-[16.5px] tracking-tight text-slate-900 leading-tight">
                 AI Complaint Hub
@@ -103,31 +120,61 @@ const Sidebar = () => {
             </div>
           </div>
 
-          {/* ── Organization Card with Dropdown ────────────────────────── */}
+          {/* Organization Card with Dropdown */}
           <div className="relative px-1 mb-4" ref={orgMenuRef}>
             <button
               type="button"
               onClick={() => setShowOrgMenu((prev) => !prev)}
-              className="w-full bg-[#f1f4fd] hover:bg-[#eaf0fc] active:bg-[#e3ecfb] border border-[#e2e8f8] rounded-2xl p-2.5 flex items-center justify-between gap-2.5 transition-all text-left shadow-2xs group"
+              className={`w-full ${
+                isDark
+                  ? 'bg-[#dbeafe] hover:bg-[#bfdbfe] active:bg-[#bfdbfe] border-[#93c5fd]'
+                  : 'bg-[#f1f4fd] hover:bg-[#eaf0fc] active:bg-[#e3ecfb] border-[#e2e8f8]'
+              } border rounded-2xl p-2.5 flex items-center justify-between gap-2.5 transition-all text-left shadow-2xs group`}
               title="Click to view organization details"
             >
               <div className="flex items-center gap-2.5 min-w-0">
-                <div className="w-9 h-9 rounded-xl bg-[#e3eafd] border border-[#d5ddfb] flex items-center justify-center text-[#4361ee] shrink-0 group-hover:scale-105 transition-transform">
+                <div
+                  className={`w-9 h-9 rounded-xl border flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform ${
+                    isDark
+                      ? 'bg-[#bfdbfe] border-[#93c5fd] text-[#1d4ed8]'
+                      : 'bg-[#e3eafd] border-[#d5ddfb] text-[#4361ee]'
+                  }`}
+                >
                   <Building2 size={18} strokeWidth={2.2} />
                 </div>
+
                 <div className="min-w-0 flex-1">
-                  <p className="text-[13px] font-bold text-slate-900 leading-tight truncate">
+                  <p
+                    className={`text-[13px] font-bold leading-tight truncate ${
+                      isDark ? 'text-[#0f172a]' : 'text-slate-900'
+                    }`}
+                  >
                     {orgName}
                   </p>
-                  <p className="text-[11.5px] text-slate-500 font-medium leading-tight truncate mt-0.5">
+
+                  <p
+                    className={`text-[11.5px] font-medium leading-tight truncate mt-0.5 ${
+                      isDark ? 'text-[#334155]' : 'text-slate-500'
+                    }`}
+                  >
                     {roleSubtitle}
                   </p>
                 </div>
               </div>
+
               <ChevronDown
                 size={16}
-                className={`text-slate-400 shrink-0 transition-transform duration-200 ${showOrgMenu ? 'rotate-180 text-indigo-600' : ''
-                  }`}
+                className={`shrink-0 transition-transform duration-200 ${
+                  showOrgMenu ? 'rotate-180' : ''
+                } ${
+                  isDark
+                    ? showOrgMenu
+                      ? 'text-[#1d4ed8]'
+                      : 'text-[#334155]'
+                    : showOrgMenu
+                      ? 'text-indigo-600'
+                      : 'text-slate-400'
+                }`}
               />
             </button>
 
@@ -139,8 +186,12 @@ const Sidebar = () => {
                     <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
                       Active Workspace
                     </p>
-                    <p className="text-xs font-bold text-slate-800 truncate">{orgName}</p>
+
+                    <p className="text-xs font-bold text-slate-800 truncate">
+                      {orgName}
+                    </p>
                   </div>
+
                   <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
                     Live
                   </span>
@@ -189,16 +240,18 @@ const Sidebar = () => {
             )}
           </div>
 
-          {/* ── Navigation Items ────────────────────────────────────── */}
+          {/* Navigation Items */}
           <nav className="flex flex-col gap-1.5 px-1">
-            {/* Organisation / Administrator Navigation */}
+            {/* Administrator Navigation */}
             {role === 'ADMIN' && (
               <>
                 <NavLink
                   to="/admin/dashboard"
                   end
                   className={() =>
-                    `nav-item ${isRouteActive('/admin/dashboard', true) ? 'active' : ''}`
+                    `nav-item ${
+                      isRouteActive('/admin/dashboard', true) ? 'active' : ''
+                    }`
                   }
                 >
                   <Home size={19} strokeWidth={2} />
@@ -208,7 +261,9 @@ const Sidebar = () => {
                 <NavLink
                   to="/admin/complaints"
                   className={() =>
-                    `nav-item ${isRouteActive('/admin/complaints') ? 'active' : ''}`
+                    `nav-item ${
+                      isRouteActive('/admin/complaints') ? 'active' : ''
+                    }`
                   }
                 >
                   <FileText size={19} strokeWidth={2} />
@@ -218,7 +273,9 @@ const Sidebar = () => {
                 <NavLink
                   to="/admin/users"
                   className={() =>
-                    `nav-item ${isRouteActive('/admin/users') ? 'active' : ''}`
+                    `nav-item ${
+                      isRouteActive('/admin/users') ? 'active' : ''
+                    }`
                   }
                 >
                   <Users size={19} strokeWidth={2} />
@@ -227,14 +284,16 @@ const Sidebar = () => {
               </>
             )}
 
-            {/* User Section Navigation */}
+            {/* User Navigation */}
             {role === 'USER' && (
               <>
                 <NavLink
                   to="/user/dashboard"
                   end
                   className={() =>
-                    `nav-item ${isRouteActive('/user/dashboard', true) ? 'active' : ''}`
+                    `nav-item ${
+                      isRouteActive('/user/dashboard', true) ? 'active' : ''
+                    }`
                   }
                 >
                   <Home size={19} strokeWidth={2} />
@@ -244,7 +303,9 @@ const Sidebar = () => {
                 <NavLink
                   to="/user/submit"
                   className={() =>
-                    `nav-item ${isRouteActive('/user/submit') ? 'active' : ''}`
+                    `nav-item ${
+                      isRouteActive('/user/submit') ? 'active' : ''
+                    }`
                   }
                 >
                   <PlusCircle size={19} strokeWidth={2} />
@@ -254,7 +315,9 @@ const Sidebar = () => {
                 <NavLink
                   to="/user/complaints"
                   className={() =>
-                    `nav-item ${isRouteActive('/user/complaints') ? 'active' : ''}`
+                    `nav-item ${
+                      isRouteActive('/user/complaints') ? 'active' : ''
+                    }`
                   }
                 >
                   <FileText size={19} strokeWidth={2} />
@@ -265,7 +328,7 @@ const Sidebar = () => {
           </nav>
         </div>
 
-        {/* ── Bottom Section: Modern Community Poster Card ───────────── */}
+        {/* Bottom Section: Community Poster */}
         <div className="px-1 pt-4 mt-auto">
           <div className="theme-poster rounded-3xl overflow-hidden border border-[#edf0f9] bg-gradient-to-b from-[#f3f0ff] via-[#edf2fe] to-[#e4eaff] relative shadow-xs">
             {/* Ambient background glows */}
@@ -304,13 +367,16 @@ const Sidebar = () => {
         </div>
       </aside>
 
-      {/* Mobile Bottom Navigation Bar (Shown on small screens for User) */}
+      {/* Mobile Bottom Navigation Bar for User */}
       {role === 'USER' && (
         <div className="mobile-bottom-nav fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-slate-200 z-40 px-4 py-2 flex items-center justify-around shadow-lg">
           <NavLink
             to="/user/dashboard"
             className={({ isActive }) =>
-              `flex flex-col items-center gap-1 text-[10px] font-medium transition-colors ${isActive ? 'text-indigo-600 font-semibold' : 'text-slate-500 hover:text-slate-800'
+              `flex flex-col items-center gap-1 text-[10px] font-medium transition-colors ${
+                isActive
+                  ? 'text-indigo-600 font-semibold'
+                  : 'text-slate-500 hover:text-slate-800'
               }`
             }
           >
@@ -321,7 +387,10 @@ const Sidebar = () => {
           <NavLink
             to="/user/submit"
             className={({ isActive }) =>
-              `flex flex-col items-center gap-1 text-[10px] font-medium transition-colors ${isActive ? 'text-indigo-600 font-semibold' : 'text-slate-500 hover:text-slate-800'
+              `flex flex-col items-center gap-1 text-[10px] font-medium transition-colors ${
+                isActive
+                  ? 'text-indigo-600 font-semibold'
+                  : 'text-slate-500 hover:text-slate-800'
               }`
             }
           >
@@ -334,7 +403,10 @@ const Sidebar = () => {
           <NavLink
             to="/user/complaints"
             className={({ isActive }) =>
-              `flex flex-col items-center gap-1 text-[10px] font-medium transition-colors ${isActive ? 'text-indigo-600 font-semibold' : 'text-slate-500 hover:text-slate-800'
+              `flex flex-col items-center gap-1 text-[10px] font-medium transition-colors ${
+                isActive
+                  ? 'text-indigo-600 font-semibold'
+                  : 'text-slate-500 hover:text-slate-800'
               }`
             }
           >
@@ -351,9 +423,10 @@ const Sidebar = () => {
             to="/admin/dashboard"
             end
             className={({ isActive }) =>
-              `flex flex-1 flex-col items-center justify-center gap-1 text-[10px] font-medium transition-colors ${isActive
-                ? 'text-indigo-600 font-semibold'
-                : 'text-slate-500 hover:text-slate-800'
+              `flex flex-1 flex-col items-center justify-center gap-1 text-[10px] font-medium transition-colors ${
+                isActive
+                  ? 'text-indigo-600 font-semibold'
+                  : 'text-slate-500 hover:text-slate-800'
               }`
             }
           >
@@ -364,9 +437,10 @@ const Sidebar = () => {
           <NavLink
             to="/admin/complaints"
             className={({ isActive }) =>
-              `flex flex-1 flex-col items-center justify-center gap-1 text-[10px] font-medium transition-colors ${isActive
-                ? 'text-indigo-600 font-semibold'
-                : 'text-slate-500 hover:text-slate-800'
+              `flex flex-1 flex-col items-center justify-center gap-1 text-[10px] font-medium transition-colors ${
+                isActive
+                  ? 'text-indigo-600 font-semibold'
+                  : 'text-slate-500 hover:text-slate-800'
               }`
             }
           >
@@ -377,9 +451,10 @@ const Sidebar = () => {
           <NavLink
             to="/admin/users"
             className={({ isActive }) =>
-              `flex flex-1 flex-col items-center justify-center gap-1 text-[10px] font-medium transition-colors ${isActive
-                ? 'text-indigo-600 font-semibold'
-                : 'text-slate-500 hover:text-slate-800'
+              `flex flex-1 flex-col items-center justify-center gap-1 text-[10px] font-medium transition-colors ${
+                isActive
+                  ? 'text-indigo-600 font-semibold'
+                  : 'text-slate-500 hover:text-slate-800'
               }`
             }
           >
@@ -398,6 +473,7 @@ const Sidebar = () => {
                 <User className="w-5 h-5 text-indigo-200" />
                 <h3 className="text-sm font-bold">User Profile</h3>
               </div>
+
               <button
                 type="button"
                 onClick={() => setShowProfileModal(false)}
@@ -412,9 +488,14 @@ const Sidebar = () => {
                 <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-600 to-purple-600 text-white font-bold text-base flex items-center justify-center shrink-0 shadow-md shadow-indigo-500/20">
                   {initials}
                 </div>
+
                 <div className="min-w-0">
-                  <h4 className="text-sm font-bold text-slate-900 truncate">{userName}</h4>
+                  <h4 className="text-sm font-bold text-slate-900 truncate">
+                    {userName}
+                  </h4>
+
                   <p className="text-slate-500 truncate">{userEmail}</p>
+
                   <span className="inline-block mt-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">
                     {role === 'ADMIN' ? 'Administrator' : 'Verified Member'}
                   </span>
@@ -423,21 +504,32 @@ const Sidebar = () => {
 
               <div className="space-y-2 text-slate-600">
                 <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 border border-slate-100">
-                  <span className="font-semibold text-slate-500">Organization:</span>
+                  <span className="font-semibold text-slate-500">
+                    Organization:
+                  </span>
                   <span className="font-bold text-slate-800">{orgName}</span>
                 </div>
+
                 <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 border border-slate-100">
                   <span className="font-semibold text-slate-500">Role:</span>
                   <span className="font-bold text-slate-800">{role}</span>
                 </div>
+
                 {user?.department && (
                   <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 border border-slate-100">
-                    <span className="font-semibold text-slate-500">Department:</span>
-                    <span className="font-bold text-slate-800">{user.department}</span>
+                    <span className="font-semibold text-slate-500">
+                      Department:
+                    </span>
+                    <span className="font-bold text-slate-800">
+                      {user.department}
+                    </span>
                   </div>
                 )}
+
                 <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 border border-slate-100">
-                  <span className="font-semibold text-slate-500">Workspace Status:</span>
+                  <span className="font-semibold text-slate-500">
+                    Workspace Status:
+                  </span>
                   <span className="text-emerald-700 font-semibold flex items-center gap-1.5">
                     <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />
                     Active

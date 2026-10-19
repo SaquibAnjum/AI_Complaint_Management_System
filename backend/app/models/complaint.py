@@ -30,7 +30,16 @@ class Complaint(db.Model):
 
     __tablename__ = "complaints"
 
+    __table_args__ = (
+        db.UniqueConstraint(
+            "organization_id",
+            "ticket_number",
+            name="uq_complaints_org_ticket_number",
+        ),
+    )
+
     id = db.Column(db.Integer, primary_key=True)
+    ticket_number = db.Column(db.Integer, nullable=True)
     organization_id = db.Column(
         db.Integer,
         db.ForeignKey("organizations.id"),
@@ -126,6 +135,12 @@ class Complaint(db.Model):
 
         data = {
             "id": self.id,
+            "ticket_number": self.ticket_number,
+            "ticket_id": (
+                f"CMP-{self.ticket_number}"
+                if self.ticket_number is not None
+                else f"CMP-{self.id}"
+            ),
             "organization_id": self.organization_id,
             "organization_name": (
                 self.organization.name if self.organization else None

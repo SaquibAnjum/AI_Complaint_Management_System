@@ -142,8 +142,18 @@ def create_complaint():
         payload.get("department") or ai_department
     )
 
+    # Generate a complaint number within this organization.
+    last_ticket_number = (
+        db.session.query(db.func.max(Complaint.ticket_number))
+        .filter_by(organization_id=user.organization_id)
+        .scalar()
+        or 0
+    )
+    next_ticket_number = last_ticket_number + 1
+
     complaint = Complaint(
         organization_id=user.organization_id,
+        ticket_number=next_ticket_number,
         user_id=user.id,
         title=title,
         description=description,
